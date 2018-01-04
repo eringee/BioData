@@ -15,6 +15,9 @@ the Free Software Foundation.
 
 ******************************************************/
 
+#ifndef THRESHOLD_H_
+#define THRESHOLD_H_
+
 class Threshold {
   float lower;
   float upper;
@@ -36,10 +39,11 @@ public:
       triggered = false;
     }
     return false;
-  
+
  }
 
 
-  
+
 };
 
+#endif

@@ -16,6 +16,9 @@ the Free Software Foundation.
 
 ******************************************************/
 
+#ifndef MIN_MAX_H_
+#define MIN_MAX_H_
+
 class MinMax {
     float input= 0;
     float min = 0;
@@ -40,7 +43,7 @@ class MinMax {
     float filter(float f) {
 
       input = f;
-      
+
       if ( reset == true ) {
         reset = false;
         min = f;
@@ -66,7 +69,7 @@ class MinMax {
       return max;
     }
 
-    
+
     float getMin() {
 
       return min;
@@ -75,3 +78,4 @@ class MinMax {
 
 };
 
+#endif

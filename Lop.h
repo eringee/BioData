@@ -16,12 +16,15 @@ the Free Software Foundation.
 
 ******************************************************/
 
+#ifndef LOP_H_
+#define LOP_H_
+
 class Lop {
-  
+
   float lop;
   float value;
  public:
- 
+
   Lop(float lop) {
     this->lop = lop;
     };
@@ -30,7 +33,8 @@ class Lop {
     value = (input-value)*lop + value;
     return value;
   }
-  
-  
+
+
 };
 
+#endif
