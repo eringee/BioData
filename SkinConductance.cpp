@@ -32,6 +32,7 @@ SkinConductance::SkinConductance(uint8_t pin) :
   _pin(pin),
   GSRaverager(1250),
   gsrLop(0.001) {
+    reset();
 }
 
 void SkinConductance::reset() {
