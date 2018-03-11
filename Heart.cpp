@@ -28,12 +28,13 @@
  */
 #include "Heart.h"
 
-Heart::Heart(uint8_t pin) :
+Heart::Heart(uint8_t pin, unsigned long rate) :
   _pin(pin),
   heartThresh(0.25, 0.75),
   heartSensorAmplitudeLop(0.001),
   heartSensorBpmLop(0.001)
 {
+  setSampleRate(rate);
   reset();
 }
 
@@ -46,32 +47,24 @@ void Heart::reset() {
   bpmChronoStart = millis();
   bpm = 60;
   beat = false;
+
+  prevSampleMicros = micros();
+
+  // Perform one update.
+  doUpdate();
+}
+
+void Heart::setSampleRate(unsigned long rate) {
+  sampleRate = rate;
+  microsBetweenSamples = 1000000UL / sampleRate;
 }
 
 void Heart::update() {
-  // Read analog value.
-  heartSensorReading = analogRead(_pin);
-
-  heartSensorFiltered = heartMinMax.filter(heartSensorReading);
-  heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
-  heartMinMax.adapt(0.01); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
-
-  heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
-  heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
-
-  heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
-  heartSensorAmplitudeLopValueMinMax.adapt(0.001);
-  heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
-  heartSensorBpmLopValueMinMax.adapt(0.001);
-
-  beat = heartThresh.detect(heartSensorFiltered);
-
-  if ( beat ) {
-    unsigned long t = millis();
-    float temporaryBpm = 60000. / (t - bpmChronoStart);
-    bpmChronoStart = t;
-    if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is logical
-      bpm = temporaryBpm;
+  unsigned long t = micros();
+  if (t - prevSampleMicros >= microsBetweenSamples) {
+    // Perform updates.
+    doUpdate();
+    prevSampleMicros = t;
   }
 }
 
@@ -89,4 +82,31 @@ float Heart::getBPM() const {
 
 int Heart::getRaw() const {
   return heartSensorReading;
+}
+
+void Heart::sample() {
+  // Read analog value if needed.
+  heartSensorReading = analogRead(_pin);
+
+  heartSensorFiltered = heartMinMax.filter(heartSensorReading);
+  heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
+  heartMinMax.adapt(0.01); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+
+  heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
+  heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
+
+  heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
+  heartSensorAmplitudeLopValueMinMax.adapt(0.001);
+  heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
+  heartSensorBpmLopValueMinMax.adapt(0.001);
+
+  beat = heartThresh.detect(heartSensorFiltered);
+
+  if ( beat ) {
+    unsigned long ms = millis();
+    float temporaryBpm = 60000. / (ms - bpmChronoStart);
+    bpmChronoStart = ms;
+    if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is logical
+      bpm = temporaryBpm;
+  }
 }

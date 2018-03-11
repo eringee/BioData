@@ -67,16 +67,27 @@ class Heart {
 
   bool beat;
 
+  // Sample rate in Hz.
+  unsigned long sampleRate;
+
+  // Internal use.
+  unsigned long microsBetweenSamples;
+  unsigned long prevSampleMicros;
+
 public:
-  Heart(uint8_t pin);
+  Heart(uint8_t pin, unsigned long rate=500);
   virtual ~Heart() {}
 
   /// Resets all values.
   void reset();
 
+  /// Sets sample rate.
+  void setSampleRate(unsigned long rate);
+
   /**
    * Reads the signal and perform filtering operations. Call this before
-   * calling any of the access functions.
+   * calling any of the access functions. This function takes into account
+   * the sample rate.
    */
   void update();
 
@@ -91,6 +102,9 @@ public:
 
   /// Returns raw signal as returned by analogRead().
   int getRaw() const;
+
+  // Performs the actual adjustments of signals and filterings.
+  void sample();
 };
 
 #endif
