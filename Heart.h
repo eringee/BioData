@@ -1,17 +1,17 @@
 /*
- * SkinConductance.h
+ * Heart.h
  *
- * This class defines an object that can be used to gather information about
- * skin conductance (SC) -- also called galvanic skin respone (GSR) or electro-dermic
- * activity (EDA).
+ * This class defines an object that can be used to gather information from a photoplethysmograph
+ *  -- also known as pulse sensor.
  *
  * This file is part of the BioData project
- * (c) 2018 Erin Gee
+ * (c) 2018 Erin Gee   http://www.eringee.net
  *
  * Contributing authors:
  * (c) 2018 Erin Gee
  * (c) 2018 Sofian Audry
  * (c) 2017 Thomas Ouellet Fredericks
+ * (c) 2017 Martin Peach
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,38 +37,42 @@
 
 class Heart {
 
-  // Analog pin the SC sensor is connected to.
+  // Analog pin the pulse sensor is connected to.
   uint8_t _pin;
-
-  unsigned long bpmChronoStart;
-
-  MinMax heartMinMax;
-  Threshold heartThresh;
-
-  Lop heartSensorAmplitudeLop;
-  Lop heartSensorBpmLop;
-
-  float heartSensorAmplitudeLopValue;
-
-  float heartSensorBpmLopValue;
-  MinMax heartSensorAmplitudeLopValueMinMax;
-
-  float heartSensorAmplitudeLopValueMinMaxValue;
-  MinMax heartSensorBpmLopValueMinMax;
-
-  float heartSensorBpmLopValueMinMaxValue;
-
-  float heartSensorFiltered;
-  float heartSensorAmplitude;
-
-  float heartSensorReading;
-
-  float bpm;  // this value is fed to initialize your BPM before a heartbeat is detected
-
-  bool beat;
-
+  
+  // used to start counting
+  unsigned long bpmChronoStart; //milliseconds
+ 
   // Sample rate in Hz.
   unsigned long sampleRate;
+    
+  // changes to TRUE(1) when a beat occurs, otherwise reads as FALSE(0)
+  bool beat;
+
+  // threshold to determine if a heartbeat has occurred
+  Threshold heartThresh;
+    
+  // raw ADC value of reading
+  float heartSensorReading;
+  
+  // normalize the raw reading using its minimum and maximum values
+  MinMax heartMinMax;
+  float heartSensorFiltered; // raw value normalized from 0.0 to 1.0
+
+  // raw amplitude of ADC values
+  float heartSensorAmplitude;
+  
+  // apply low-pass filter to the amplitude of the raw signal and output deviation from average amplitude
+  Lop heartSensorAmplitudeLop;
+  float heartSensorAmplitudeLopValue; // low-passed value of amplitude of raw signal
+  MinMax heartSensorAmplitudeLopValueMinMax;
+  float heartSensorAmplitudeLopValueMinMaxValue; // amplitude ranged from 0.0 to 1.0, 0.5 being average
+   
+  // apply low-pass filter to the BPM and output deviation from average BPM
+  Lop heartSensorBpmLop;
+  float heartSensorBpmLopValue; // low-passed value of BPM
+  MinMax heartSensorBpmLopValueMinMax;
+  float heartSensorBpmLopValueMinMaxValue; // BPM average ranged from 0.0 to 1.0, 0.5 being average
 
   // Internal use.
   unsigned long microsBetweenSamples;
