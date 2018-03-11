@@ -1,5 +1,5 @@
 # BioData
-An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat.
+An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat. 
 
 [Download the Sourcecode Here](https://github.com/eringee/BioData/archive/master.zip)
 
@@ -55,5 +55,7 @@ void loop() {
 * [Sofian Audry](https://github.com/sofian)
 * [Thomas Ouellet Fredericks](https://github.com/thomasfredericks)
 
-# COPYING
+# COPYING AND GENERAL USE
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
 Released under GNU GPL 3.0 License.  Copyright Erin Gee 2017.
