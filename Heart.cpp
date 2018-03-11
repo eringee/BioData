@@ -68,7 +68,7 @@ void Heart::update() {
 
   if ( beat ) {
     unsigned long t = millis();
-    unsigned long temporaryBpm = 60000. / (t - bpmChronoStart);
+    float temporaryBpm = 60000. / (t - bpmChronoStart);
     bpmChronoStart = t;
     if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is logical
       bpm = temporaryBpm;
