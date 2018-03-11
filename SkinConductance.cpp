@@ -41,7 +41,7 @@ void SkinConductance::reset() {
   GSRmastered = 0;
   GSRav = 0;
   gsrMinMax = MinMax();
-  gsrLop = Lop(0.001); //0.001
+  gsrLop = Lop(0.001);
   gsrSensorFiltered = 0;
   gsrSensorAmplitude = 0;
   gsrSensorLop = 0;
