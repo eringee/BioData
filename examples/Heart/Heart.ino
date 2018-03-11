@@ -15,7 +15,7 @@ the Free Software Foundation.
     For more details: <http://www.gnu.org/licenses/>.
 
 ******************************************************/
-#include <SkinConductance.h>
+#include <Heart.h>
 
 // Create instance for sensor on analog input pin.
 Heart heart(A1);
