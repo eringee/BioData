@@ -104,6 +104,7 @@ public:
   int getRaw() const;
 
   // Performs the actual adjustments of signals and filterings.
+  // Internal use: don't use directly, use update() instead.
   void sample();
 };
 
