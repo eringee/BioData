@@ -51,7 +51,7 @@ void Heart::reset() {
   prevSampleMicros = micros();
 
   // Perform one update.
-  doUpdate();
+  sample();
 }
 
 void Heart::setSampleRate(unsigned long rate) {
@@ -63,7 +63,7 @@ void Heart::update() {
   unsigned long t = micros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
-    doUpdate();
+    sample();
     prevSampleMicros = t;
   }
 }
