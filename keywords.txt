@@ -1,0 +1,8 @@
+Heart	KEYWORD1
+setSampleRate	KEYWORD2
+update	KEYWORD2
+reset	KEYWORD2
+getNormalized	KEYWORD2
+beatDetected	KEYWORD2
+getBPM	KEYWORD2
+getRaw	KEYWORD2
