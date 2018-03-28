@@ -49,12 +49,22 @@ class SkinConductance {
   float gsrSensorAmplitude;
   float gsrSensorLop;
 
+  // Sample rate in Hz.
+  unsigned long sampleRate;
+
+  // Internal use.
+  unsigned long microsBetweenSamples;
+  unsigned long prevSampleMicros;
+
 public:
-  SkinConductance(uint8_t pin);
+  SkinConductance(uint8_t pin, unsigned long rate=50);
   virtual ~SkinConductance() {}
 
   /// Resets all values.
   void reset();
+
+  /// Sets sample rate.
+  void setSampleRate(unsigned long rate);
 
   /**
    * Reads the signal and perform filtering operations. Call this before
@@ -70,6 +80,10 @@ public:
 
   /// Returns raw signal as returned by analogRead() (inverted).
   int getRaw() const;
+
+  // Performs the actual adjustments of signals and filterings.
+  // Internal use: don't use directly, use update() instead.
+  void sample();
 };
 
 #endif

@@ -29,10 +29,11 @@
  */
 #include "SkinConductance.h"
 
-SkinConductance::SkinConductance(uint8_t pin) :
+SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
   _pin(pin),
   GSRaverager(1250),
   gsrLop(0.001) {
+    setSampleRate(rate);
     reset();
 }
 
@@ -46,9 +47,40 @@ void SkinConductance::reset() {
   gsrSensorFiltered = 0;
   gsrSensorAmplitude = 0;
   gsrSensorLop = 0;
+
+  prevSampleMicros = micros();
+
+  // Perform one update.
+  sample();
+}
+
+void SkinConductance::setSampleRate(unsigned long rate) {
+  sampleRate = rate;
+  microsBetweenSamples = 1000000UL / sampleRate;
 }
 
 void SkinConductance::update() {
+  unsigned long t = micros();
+  if (t - prevSampleMicros >= microsBetweenSamples) {
+    // Perform updates.
+    sample();
+    prevSampleMicros = t;
+  }
+}
+
+float SkinConductance::getSCR() const {
+  return GSRmastered;
+}
+
+float SkinConductance::getSCL() const {
+  return GSRav;
+}
+
+int SkinConductance::getRaw() const {
+  return gsrSensorReading;
+}
+
+void SkinConductance::sample() {
   // Read sensor value and invert it.
   gsrSensorReading = 1023 - analogRead(_pin);
 
@@ -70,16 +102,4 @@ void SkinConductance::update() {
 
   // Keep the mapping within 0..1 range
   GSRmastered = constrain(GSRmastered, 0, 1);
-}
-
-float SkinConductance::getSCR() const {
-  return GSRmastered;
-}
-
-float SkinConductance::getSCL() const {
-  return GSRav;
-}
-
-int SkinConductance::getRaw() const {
-  return gsrSensorReading;
 }
