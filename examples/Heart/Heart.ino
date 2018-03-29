@@ -40,11 +40,13 @@ void loop() {
   // Update sensor.
   heart.update();
 
-  // Print-out different information
-  Serial.print(heart.getBPM());  
-  Serial.print(" ");
-  Serial.print(heart.getNormalized());
+  // Print-out different information.  
 
+  Serial.print(heart.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
+  Serial.print("\t");
+  Serial.print(heart.getBPM());  
+  Serial.print("\t");
+                                     
   // An example of how you do something when a heartbeat is detected.
   // Remember that you should avoid using delays in order to preserve true samplerate.
   
@@ -59,6 +61,7 @@ void loop() {
   }  
   else {
     digitalWrite(LED, LOW);
+    Serial.println();
   }
 
 }
