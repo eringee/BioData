@@ -43,11 +43,22 @@ void loop() {
   // Print-out different information.  
 
   Serial.print(heart.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
-  Serial.print("\t");
+                                       // Note that if signal amplitude changes drastically the beat detection may
+                                       // pause while the normalization process recalibrates
+                                       
+  Serial.print("\t");                  // tab separated values
+  
   Serial.print(heart.getBPM());  
   Serial.print("\t");
+  
+  Serial.print(heart.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
+                                      // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
+  Serial.print("\t");
+  Serial.print(heart.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
+                                        // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
+  Serial.print("\t");
                                      
-  // An example of how you do something when a heartbeat is detected.
+  // An example of how to do something when a heartbeat is detected.
   // Remember that you should avoid using delays in order to preserve true samplerate.
   
   if (heart.beatDetected()){  
