@@ -1,3 +1,5 @@
+// This example demonstrates beating an LED on heartbeat, and data relevant to Heart
+// for more info see README at https://github.com/eringee/BioData/
 /******************************************************
 copyright Erin Gee 2017
 
@@ -20,9 +22,16 @@ the Free Software Foundation.
 // Create instance for sensor on analog input pin.
 Heart heart(A1);
 
+// Optional variables for lighting onboard LED on heartbeat
+int counter;  // counter for timing routine without using delay
+int LED = 13; // onboard LED
+
 void setup() {
   Serial.begin(9600);
-
+  
+  //optional LED for displaying heartbeat
+  pinMode(LED, OUTPUT);
+  
   // Initialize sensor.
   heart.reset();
 }
@@ -31,11 +40,26 @@ void loop() {
   // Update sensor.
   heart.update();
 
-  // Print-out different informations.
-  Serial.print(heart.beatDetected());
-  Serial.print(" ");
-  Serial.print(heart.getBPM());
+  // Print-out different information
+  Serial.print(heart.getBPM());  
   Serial.print(" ");
   Serial.print(heart.getNormalized());
-  Serial.println();
+
+  // An example of how you do something when a heartbeat is detected.
+  // Remember that you should avoid using delays in order to preserve true samplerate.
+  
+  if (heart.beatDetected()){  
+    counter = 0;
+    digitalWrite(LED, HIGH);
+  }
+   
+  if (counter < 500) {  
+    counter++;
+    Serial.println("Beat!");
+  }  
+  else {
+    digitalWrite(LED, LOW);
+  }
+
 }
+
