@@ -103,6 +103,20 @@ public:
   /// Returns raw signal as returned by analogRead().
   int getRaw() const;
 
+  /** Returns the average amplitude of signal mapped between 0.0 and 1.0.
+   * For example, if amplitude is average, returns 0.5,
+   * if amplitude is below average, returns < 0.5
+   * if amplitude is above average, returns > 0.5.
+   */
+  float amplitudeChange() const;
+
+  /** Returns the average bpm of signal mapped between 0.0 and 1.0.
+    * For example, if bpm is average, returns 0.5,
+    * if bpm is below average, returns < 0.5
+    * if bpm is above average, returns > 0.5.
+    */
+  float bpmChange() const;
+
   // Performs the actual adjustments of signals and filterings.
   // Internal use: don't use directly, use update() instead.
   void sample();

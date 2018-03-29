@@ -1,9 +1,8 @@
 /*
- * SkinConductance.cpp
+ * Heart.cpp
  *
  * This class defines an object that can be used to gather information about
- * skin conductance (SC) -- also called galvanic skin respone (GSR) or electro-dermic
- * activity (EDA).
+ * pulse as gathered through a photoplethysmograph such as the Pulse Sensor.
  *
  * This file is part of the BioData project
  * (c) 2018 Erin Gee
@@ -72,6 +71,14 @@ float Heart::getNormalized() const {
   return heartSensorFiltered;
 }
 
+float Heart::amplitudeChange() const {
+  return heartSensorAmplitudeLopValueMinMaxValue;
+}
+
+float Heart::bpmChange() const {
+  return heartSensorBpmLopValueMinMaxValue;
+}
+
 bool Heart::beatDetected() const {
   return beat;
 }
@@ -106,7 +113,7 @@ void Heart::sample() {
     unsigned long ms = millis();
     float temporaryBpm = 60000. / (ms - bpmChronoStart);
     bpmChronoStart = ms;
-    if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is logical
+    if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is within bounds
       bpm = temporaryBpm;
   }
 }
