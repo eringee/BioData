@@ -22,7 +22,7 @@ the Free Software Foundation.
 
 
 // Create instance for sensor on analog input pin.
-Heart heart(A8);
+Heart heart(A1);
 
 // variables for lighting onboard LED on heartbeat without delays
 int LED = 13;       // onboard LED
