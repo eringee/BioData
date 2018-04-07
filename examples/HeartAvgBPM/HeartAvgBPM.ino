@@ -54,8 +54,8 @@ void setup() {
 void loop() {
   // Update sensor.
   heart.update();
-  unsigned long currentMillis = millis();    // how long has the program has been running?
-  Serial.println(heart.getNormalized());
+  // update time
+  unsigned long currentMillis = millis();   
   
   if (heart.beatDetected()){  
     if (doOnce == true){
