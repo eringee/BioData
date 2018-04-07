@@ -57,7 +57,7 @@ class SkinConductance {
   unsigned long prevSampleMicros;
 
 public:
-  SkinConductance(uint8_t pin, unsigned long rate=50);
+  SkinConductance(uint8_t pin, unsigned long rate=100);
   virtual ~SkinConductance() {}
 
   /// Resets all values.

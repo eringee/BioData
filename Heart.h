@@ -1,9 +1,8 @@
 /*
- * SkinConductance.h
- *
- * This class defines an object that can be used to gather information about
- * skin conductance (SC) -- also called galvanic skin respone (GSR) or electro-dermic
- * activity (EDA).
+* Heart.h
+*
+* This class defines an object that can be used to gather information about
+* pulse as gathered through a photoplethysmograph such as the Pulse Sensor.
  *
  * This file is part of the BioData project
  * (c) 2018 Erin Gee
@@ -103,18 +102,18 @@ public:
   /// Returns raw signal as returned by analogRead().
   int getRaw() const;
 
-  /** Returns the average amplitude of signal mapped between 0.0 and 1.0.
-   * For example, if amplitude is average, returns 0.5,
+  ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
+  /* For example, if amplitude is average, returns 0.5,
    * if amplitude is below average, returns < 0.5
    * if amplitude is above average, returns > 0.5.
-   */
+  */
   float amplitudeChange() const;
 
-  /** Returns the average bpm of signal mapped between 0.0 and 1.0.
-    * For example, if bpm is average, returns 0.5,
+  /// Returns the average bpm of signal mapped between 0.0 and 1.0.
+  /* For example, if bpm is average, returns 0.5,
     * if bpm is below average, returns < 0.5
     * if bpm is above average, returns > 0.5.
-    */
+  */
   float bpmChange() const;
 
   // Performs the actual adjustments of signals and filterings.
