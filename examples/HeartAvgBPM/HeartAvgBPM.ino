@@ -19,24 +19,33 @@ the Free Software Foundation.
 ******************************************************/
 #include <Heart.h>
 
-// Create instance for sensor on analog input pin.
-Heart heart(A1);
 
-// Optional variables for lighting onboard LED on heartbeat
-int ledCounter;     // counter for led routine without delays
+
+// Create instance for sensor on analog input pin.
+Heart heart(A8);
+
+// variables for lighting onboard LED on heartbeat without delays
 int LED = 13;       // onboard LED
+unsigned long litMillis = 0;        // will store how long LED was lit up
+const long ledInterval = 50;        // interval at which to blink LED (milliseconds)
+
+// if you do not receive a heartbeat value in over 5 seconds, flush the BPM array and start fresh
+const long flushInterval = 2000;    //interval at which to refresh values stored in array
+
+boolean doOnce = true;   // makes sure that if a heartbeat is found that information is gathered only once during cycle
 
 // variables for averaging BPM over several heartbeats
 int bpmCounter = 0;      // counter for counting bpmArray position     
 int bpmArray[100];   // the array that holds bpm values. Define as a large number you don't need to use them all.
-int avgBPM;          // value for displaying average BPM over several heartbeats
-int arraySize = 10;   //determine how many beats you will collect and average
+int totalBPM = 0;          // value for displaying average BPM over several heartbeats
+int arraySize = 5;   //determine how many beats you will collect and average
 
 void setup() {
   Serial.begin(9600);
   
   //optional LED for displaying heartbeat
   pinMode(LED, OUTPUT);
+  litMillis = ledInterval;  // make sure the LED doesn't light up automatically
   
   // Initialize sensor.
   heart.reset();
@@ -45,43 +54,50 @@ void setup() {
 void loop() {
   // Update sensor.
   heart.update();
-
-  // Print-out different information.  
+  unsigned long currentMillis = millis();    // how long has the program has been running?
+  Serial.println(heart.getNormalized());
   
   if (heart.beatDetected()){  
-    ledCounter = 0;                         // reset LED counter
+    if (doOnce == true){
+    litMillis = currentMillis;
     digitalWrite(LED, HIGH);                // turn on an LED for visual feedback that heartbeat occurred
+    
     bpmArray[bpmCounter] = heart.getBPM();  // grab a BPM snapshot every time a heartbeat occurs
     bpmCounter++;                           // increment the BPMcounter value
+    doOnce = false;
+    }
+  }
+  else {
+    doOnce = true;
   }
 
-  if (bpmCounter == (arraySize-1)) {                    // if you have grabbed 10 heartbeats
-    avgBPM = 0;                             // refresh totalBPM
+  if (bpmCounter == (arraySize)) {                    // if you have grabbed enough heartbeats to average                                      
     
     for (int x = 0; x <= (arraySize-1); x++) {          // add up all the values in the array
-  //    totalBPM += bpmArray[x];
-      avgBPM = avgBPM + bpmArray[x];
+      totalBPM = totalBPM + bpmArray[x];
+      Serial.println(bpmArray[x]);
     }
 
-    avgBPM = avgBPM/arraySize;                 // divide by amount of values processed in array
+    int avgBPM = totalBPM/arraySize;                 // divide by amount of values processed in array
     
-    Serial.print("Your averaged BPM is: ");
+    Serial.print("Your average BPM over ");
+    Serial.print(arraySize);
+    Serial.print(" beats is ");
     Serial.println(avgBPM);
-    delay(5000);                            // stop everything to read the message for 5 seconds
     bpmCounter = 0;                     //  reset bpmCounter
-    avgBPM = 0;
+    totalBPM = 0;                       // refresh totalBPM
+    avgBPM = 0;                        // refresh avgBPM
+    delay(2000);
   }
   
-  //TODO: incorporate millis into this process so it's universal.
-  
-  if (ledCounter < 5) {   //  on Arduino this number is 5, on Teensy it's more like 500.  
+  // check to see if it's time to turn off the LED
 
-    ledCounter++;          // increment the counter every time
-    Serial.println("Beat!");
-  }  
-  else {
+  if (currentMillis - litMillis >= ledInterval) {   // if led interval has been surpassed turn it off
     digitalWrite(LED, LOW);
   }
 
+  if (currentMillis - litMillis >= flushInterval){  // if you haven't received a heartbeat in a while keep the array fresh
+    bpmCounter = 0;
+  }
 }
 
