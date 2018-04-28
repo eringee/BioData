@@ -36,7 +36,7 @@
 
 class Heart {
 
-  // Analog pin the SC sensor is connected to.
+  // Analog pin the Heart sensor is connected to.
   uint8_t _pin;
 
   unsigned long bpmChronoStart;

@@ -29,7 +29,7 @@
 
 Heart::Heart(uint8_t pin, unsigned long rate) :
   _pin(pin),
-  heartThresh(0.25, 0.75),
+  heartThresh(0.3, 0.6),              // if signal does not fall below (low, high) bounds than signal is ignored
   heartSensorAmplitudeLop(0.001),
   heartSensorBpmLop(0.001)
 {
