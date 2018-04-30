@@ -1,8 +1,14 @@
 Heart	KEYWORD1
+Respiration	KEYWORD1
+SkinConductance	KEYWORD1
 setSampleRate	KEYWORD2
 update	KEYWORD2
 reset	KEYWORD2
 getNormalized	KEYWORD2
+getRaw	KEYWORD2
+bpmChange	KEYWORD2
+amplitudeChange	KEYWORD2
 beatDetected	KEYWORD2
 getBPM	KEYWORD2
-getRaw	KEYWORD2
+getSCR	KEYWORD2
+getSCL	KEYWORD2
