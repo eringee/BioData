@@ -29,15 +29,16 @@
 #define MIN_MAX_H_
 
 class MinMax {
-    float input = 0;
-    float min = 0;
-    float max = 0;
-    float value = 0;
-    bool reset = true;
+    float input;
+    float min;
+    float max;
+    float value;
+    bool reset;
 
   public:
     MinMax() {
-
+      input = min = max = value = 0;
+      reset = true;
     }
 
     void adapt(float lop) {
@@ -52,7 +53,7 @@ class MinMax {
 
       input = f;
 
-      if ( reset == true ) {
+      if ( reset ) {
         reset = false;
         min = f;
         max = f;
