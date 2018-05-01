@@ -33,12 +33,16 @@ class MinMax {
     float min;
     float max;
     float value;
-    bool reset;
+    bool firstPass;
 
   public:
     MinMax() {
+      reset();
+    }
+
+    void reset() {
       input = min = max = value = 0;
-      reset = true;
+      firstPass = true;
     }
 
     void adapt(float lop) {
@@ -53,8 +57,8 @@ class MinMax {
 
       input = f;
 
-      if ( reset ) {
-        reset = false;
+      if ( firstPass ) {
+        firstPass = false;
         min = f;
         max = f;
       } else {
