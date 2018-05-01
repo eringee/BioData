@@ -44,7 +44,7 @@ public:
 
   /// Constructor.
   Lop(float alpha_=0.01) {
-    setSmoothingFactor(alpha_);
+    setSmoothing(alpha_);
     reset();
   };
 
