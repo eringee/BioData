@@ -55,7 +55,7 @@ public:
   }
 
   /// Sets smoothing factor to value in [0, 1] (lower value = smoother).
-  void setSmoothingFactor(float alpha_) {
+  void setSmoothing(float alpha_) {
     // Constrains the smoothing factor in [0, 1].
     alpha = constrain(alpha_, 0, 1);
 
@@ -65,7 +65,7 @@ public:
 
   /// Filters sample and returns smoothed value.
   float filter(float input) {
-    // For the first #nCalibration# examples just compute the average.
+    // For the first #nCalibration# samples just compute the average.
     if (n < nCalibration) {
       n++;
       value = (value * (n-1) + input) / n;
