@@ -28,19 +28,54 @@
 
 class Lop {
 
-  float lop;
+  // Low-pass smoothing factor.
+  float alpha;
+
+  // Current value.
   float value;
-  public:
 
-  Lop(float lop) {
-    this->lop = lop;
-    };
+  // N. samples seen thus far.
+  unsigned int n;
 
-  float filter( float input ) {
-    value = (input-value)*lop + value;
-    return value;
+  // N. samples in calibration phase.
+  unsigned int nCalibration;
+
+public:
+
+  /// Constructor.
+  Lop(float alpha_=0.01) {
+    setSmoothingFactor(alpha_);
+    reset();
+  };
+
+  /// Resets filter.
+  void reset() {
+    value = 0;
+    n     = 0;
   }
 
+  /// Sets smoothing factor to value in [0, 1] (lower value = smoother).
+  void setSmoothingFactor(float alpha_) {
+    // Constrains the smoothing factor in [0, 1].
+    alpha = constrain(alpha_, 0, 1);
+
+    // Rule of thumb that maps the smoothing factor to number of samples.
+    nCalibration = int(2 / alpha - 1);
+  }
+
+  /// Filters sample and returns smoothed value.
+  float filter(float input) {
+    // For the first #nCalibration# examples just compute the average.
+    if (n < nCalibration) {
+      n++;
+      value = (value * (n-1) + input) / n;
+    }
+    // After that: switch back to exponential moving average.
+    else {
+      value += (input - value) * alpha;
+    }
+    return value;
+  }
 
 };
 
