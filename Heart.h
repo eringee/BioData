@@ -43,6 +43,7 @@ class Heart {
 
   MinMax heartMinMax;
   Threshold heartThresh;
+  float heartMinMaxSmoothing;
 
   Lop heartSensorAmplitudeLop;
   Lop heartSensorBpmLop;
@@ -51,9 +52,11 @@ class Heart {
 
   float heartSensorBpmLopValue;
   MinMax heartSensorAmplitudeLopValueMinMax;
+  float heartSensorAmplitudeLopValueMinMaxSmoothing;
 
   float heartSensorAmplitudeLopValueMinMaxValue;
   MinMax heartSensorBpmLopValueMinMax;
+  float heartSensorBpmLopValueMinMaxSmoothing;
 
   float heartSensorBpmLopValueMinMaxValue;
 
@@ -76,6 +79,12 @@ class Heart {
 public:
   Heart(uint8_t pin, unsigned long rate=500);
   virtual ~Heart() {}
+
+  void setAmplitudeSmoothing(float smoothing);
+  void setBpmSmoothing(float smoothing);
+  void setAmplitudeMinMaxSmoothing(float smoothing);
+  void setBpmMinMaxSmoothing(float smoothing);
+  void setMinMaxSmoothing(float smoothing);
 
   /// Resets all values.
   void reset();

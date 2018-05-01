@@ -37,14 +37,41 @@ Heart::Heart(uint8_t pin, unsigned long rate) :
   reset();
 }
 
+void Heart::setAmplitudeSmoothing(float smoothing)
+{
+  heartSensorAmplitudeLop.setSmoothing(smoothing);
+}
+
+void Heart::setBpmSmoothing(float smoothing)
+{
+  heartSensorBpmLop.setSmoothing(smoothing);
+}
+
+void Heart::setAmplitudeMinMaxSmoothing(float smoothing)
+{
+  heartSensorAmplitudeLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+}
+
+void Heart::setBpmMinMaxSmoothing(float smoothing)
+{
+  heartSensorBpmLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+}
+
+void Heart::setMinMaxSmoothing(float smoothing)
+{
+  heartMinMaxSmoothing = constrain(smoothing, 0, 1);
+}
+
 void Heart::reset() {
-  heartMinMax = MinMax();
-  heartSensorAmplitudeLop = Lop(0.001);
-  heartSensorBpmLop = Lop(0.001);
-  heartSensorAmplitudeLopValueMinMax = MinMax();
-  heartSensorBpmLopValueMinMax = MinMax();
+  heartMinMax.reset();
+  heartSensorAmplitudeLop.reset();
+  heartSensorBpmLop.reset();
+  heartSensorAmplitudeLopValueMinMax.reset();
+  heartSensorBpmLopValueMinMax.reset();
+
   heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
   bpmChronoStart = millis();
+
   bpm = 60;
   beat = false;
 
@@ -98,15 +125,15 @@ void Heart::sample() {
 
   heartSensorFiltered = heartMinMax.filter(heartSensorReading);
   heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
-  heartMinMax.adapt(0.01); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+  heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 
   heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
   heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
 
   heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
-  heartSensorAmplitudeLopValueMinMax.adapt(0.001);
+  heartSensorAmplitudeLopValueMinMax.adapt(heartSensorAmplitudeLopValueMinMaxSmoothing);
   heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
-  heartSensorBpmLopValueMinMax.adapt(0.001);
+  heartSensorBpmLopValueMinMax.adapt(heartSensorBpmLopValueMinMaxSmoothing);
 
   beat = heartThresh.detect(heartSensorFiltered);
 
