@@ -38,6 +38,7 @@ Heart::Heart(uint8_t pin, unsigned long rate) :
 }
 
 void Heart::reset() {
+  heartMinMax = MinMax();
   heartSensorAmplitudeLop = Lop(0.001);
   heartSensorBpmLop = Lop(0.001);
   heartSensorAmplitudeLopValueMinMax = MinMax();
