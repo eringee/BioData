@@ -65,7 +65,8 @@ class Respiration {
 
   float bpm;  // this value is fed to initialize your BPM before a breath is detected
 
-  bool breath;
+  bool breath;// declares that we think a breath has occurred
+
 
   // Sample rate in Hz.
   unsigned long sampleRate;

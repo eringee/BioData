@@ -32,10 +32,10 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
 
 // look for center of min max signal - false triggers from noise are unlikely
-respThresh(0.5, 0.53),          // if signal does not fall below (low, high) bounds than signal is ignored
+respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
-respSensorAmplitudeLop(0.001),  // original value 0.001
-  respSensorBpmLop(0.001)       // original value 0.001
+respSensorAmplitudeLop(0.0001),  // original value 0.001
+  respSensorBpmLop(0.1)       // original value 0.001
 {
   setSampleRate(rate);
   reset();
@@ -101,7 +101,7 @@ void Respiration::sample() {
 
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
-  respMinMax.adapt(0.0005); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+  respMinMax.adapt(0.05); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 
   respSensorAmplitudeLopValue = respSensorAmplitudeLop.filter(respSensorAmplitude);
   respSensorBpmLopValue =  respSensorBpmLop.filter(bpm);
@@ -118,7 +118,8 @@ void Respiration::sample() {
     unsigned long ms = millis();
     float temporaryBpm = 60000. / (ms - bpmChronoStart);  // divide by 60 seconds
     bpmChronoStart = ms;
-    if ( temporaryBpm > 3 && temporaryBpm < 60 ) // make sure the BPM is within bounds
+    if ( temporaryBpm > 3 && temporaryBpm < 60 ) { // make sure the BPM is within bounds
       bpm = temporaryBpm;
+    }
   }
 }
