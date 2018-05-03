@@ -31,7 +31,7 @@ const long printInterval = 1;       // interval optimal for viewing on arduino s
 boolean doOnce = true;    // for only performing actions once when breath is detected
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);  // make this fast so you don't overflow the buffers 
   
   //optional LED for displaying breath
   pinMode(LED, OUTPUT);

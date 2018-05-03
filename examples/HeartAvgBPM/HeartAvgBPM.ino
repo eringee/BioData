@@ -41,7 +41,7 @@ int totalBPM = 0;          // value for displaying average BPM over several hear
 int arraySize = 5;   //determine how many beats you will collect and average
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);  // make this fast so you don't overflow the buffers
   
   //optional LED for displaying heartbeat
   pinMode(LED, OUTPUT);

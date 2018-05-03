@@ -26,7 +26,7 @@ const long ledInterval = 50;        // interval at which to blink LED (milliseco
 boolean doOnce = true;    // for only performing actions once when heartbeat is detected
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);  // make this fast so you don't overflow the buffers
   
   //optional LED for displaying heartbeat
   pinMode(LED, OUTPUT);

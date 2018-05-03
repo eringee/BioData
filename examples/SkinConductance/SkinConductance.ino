@@ -21,7 +21,7 @@ the Free Software Foundation.
 SkinConductance sc(A6);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);  // make this fast so you don't overflow the buffers
 
   // Initialize sensor.
   sc.reset();
