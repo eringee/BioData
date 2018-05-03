@@ -30,14 +30,12 @@
 
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
-// Note: might want to make this as wide as possible, as irrelevant low-frequency noise
-//from the respiration sensor is unlikely
 
-//TO DO: Thresh should probably just be an exponential moving average (.75 old vs .25 new)
-  respThresh(0.52, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
+// look for center of min max signal - false triggers from noise are unlikely
+respThresh(0.5, 0.53),          // if signal does not fall below (low, high) bounds than signal is ignored
 
 respSensorAmplitudeLop(0.001),  // original value 0.001
-  respSensorBpmLop(0.01)       // original value 0.001
+  respSensorBpmLop(0.001)       // original value 0.001
 {
   setSampleRate(rate);
   reset();
@@ -45,12 +43,12 @@ respSensorAmplitudeLop(0.001),  // original value 0.001
 
 void Respiration::reset() {
   respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
-  respSensorBpmLop = Lop(0.01);        // original value 0.001
+  respSensorBpmLop = Lop(0.001);        // original value 0.001
   respSensorAmplitudeLopValueMinMax = MinMax();
   respSensorBpmLopValueMinMax = MinMax();
   respSensorReading = respSensorFiltered = respSensorAmplitude = 0;
   bpmChronoStart = millis();   // Note that in this case, BPM refers to "breaths per minute"  ;)
-  bpm = 15;
+  bpm = 12;
   breath = false;
 
   prevSampleMicros = micros();
@@ -61,7 +59,7 @@ void Respiration::reset() {
 
 void Respiration::setSampleRate(unsigned long rate) {
   sampleRate = rate;
-  microsBetweenSamples = 2000000UL / sampleRate;
+  microsBetweenSamples = 1000000UL / sampleRate;  //
 }
 
 void Respiration::update() {
@@ -103,8 +101,7 @@ void Respiration::sample() {
 
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
-  respMinMax.adapt(0.0005); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX original value 0.01
-    //test value 0.00005
+  respMinMax.adapt(0.0005); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 
   respSensorAmplitudeLopValue = respSensorAmplitudeLop.filter(respSensorAmplitude);
   respSensorBpmLopValue =  respSensorBpmLop.filter(bpm);
