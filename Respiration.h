@@ -63,7 +63,7 @@ class Respiration {
 
   float respSensorReading;
 
-  float bpm;  // this value is fed to initialize your BPM before a heartbeat is detected
+  float bpm;  // this value is fed to initialize your BPM before a breath is detected
 
   bool breath;
 
@@ -91,13 +91,13 @@ public:
    */
   void update();
 
-  /// Get normalized heartrate signal.
+  /// Get normalized respiration signal.
   float getNormalized() const;
 
-  /// Returns true if a beat was detected during the last call to update().
+  /// Returns true if a breath was detected during the last call to update().
   bool breathDetected() const;
 
-  /// Returns BPM (beats per minute).
+  /// Returns BPM (breaths per minute).
   float getBPM() const;
 
   /// Returns raw signal as returned by analogRead().

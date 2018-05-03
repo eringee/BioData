@@ -32,22 +32,25 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
 // Note: might want to make this as wide as possible, as irrelevant low-frequency noise
 //from the respiration sensor is unlikely
-  respThresh(0.5, 0.6),          // if signal does not fall below (low, high) bounds than signal is ignored
-  respSensorAmplitudeLop(0.001),
-  respSensorBpmLop(0.001)
+
+//TO DO: Thresh should probably just be an exponential moving average (.75 old vs .25 new)
+  respThresh(0.3, 0.4),          // if signal does not fall below (low, high) bounds than signal is ignored
+
+respSensorAmplitudeLop(0.001),  // original value 0.001
+  respSensorBpmLop(0.00005)       // original value 0.001
 {
   setSampleRate(rate);
   reset();
 }
 
 void Respiration::reset() {
-  respSensorAmplitudeLop = Lop(0.001);
-  respSensorBpmLop = Lop(0.001);
+  respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
+  respSensorBpmLop = Lop(0.00005);        // original value 0.001
   respSensorAmplitudeLopValueMinMax = MinMax();
   respSensorBpmLopValueMinMax = MinMax();
   respSensorReading = respSensorFiltered = respSensorAmplitude = 0;
   bpmChronoStart = millis();   // Note that in this case, BPM refers to "breaths per minute"  ;)
-  bpm = 20;
+  bpm = 12;
   breath = false;
 
   prevSampleMicros = micros();
@@ -58,7 +61,7 @@ void Respiration::reset() {
 
 void Respiration::setSampleRate(unsigned long rate) {
   sampleRate = rate;
-  microsBetweenSamples = 1000000UL / sampleRate;
+  microsBetweenSamples = 2000000UL / sampleRate;
 }
 
 void Respiration::update() {
@@ -100,23 +103,24 @@ void Respiration::sample() {
 
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
-  respMinMax.adapt(0.01); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+  respMinMax.adapt(0.01); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX original value 0.01
+    //test value 0.00005
 
   respSensorAmplitudeLopValue = respSensorAmplitudeLop.filter(respSensorAmplitude);
   respSensorBpmLopValue =  respSensorBpmLop.filter(bpm);
 
   respSensorAmplitudeLopValueMinMaxValue = respSensorAmplitudeLopValueMinMax.filter(respSensorAmplitudeLopValue);
-  respSensorAmplitudeLopValueMinMax.adapt(0.001);
+  respSensorAmplitudeLopValueMinMax.adapt(0.001);// original value 0.001
   respSensorBpmLopValueMinMaxValue = respSensorBpmLopValueMinMax.filter(respSensorBpmLopValue);
-  respSensorBpmLopValueMinMax.adapt(0.001);
+  respSensorBpmLopValueMinMax.adapt(0.001); // original value 0.001
 
   breath = respThresh.detect(respSensorFiltered);
 
   if ( breath ) {
     unsigned long ms = millis();
-    float temporaryBpm = 20000. / (ms - bpmChronoStart);
+    float temporaryBpm = 12000. / (ms - bpmChronoStart);
     bpmChronoStart = ms;
-    if ( temporaryBpm > 10 && temporaryBpm < 90 ) // make sure the BPM is within bounds
+    if ( temporaryBpm > 3 && temporaryBpm < 40 ) // make sure the BPM is within bounds
       bpm = temporaryBpm;
   }
 }
