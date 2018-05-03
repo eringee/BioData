@@ -23,6 +23,9 @@ int LED = 13; // onboard LED
 unsigned long litMillis = 0;        // will store how long LED was lit up
 const long ledInterval = 50;        // interval at which to blink LED (milliseconds)
 
+//variable for attenuating data flow to serial port prevents crashes
+const long printInterval = 20;       // millis
+
 boolean doOnce = true;    // for only performing actions once when heartbeat is detected
 
 void setup() {
@@ -34,29 +37,33 @@ void setup() {
   
   // Initialize sensor.
   heart.reset();
+
+  // uncomment below to redefine samplerate, default is 200Hz  
+  //heart.setSampleRate(200); 
 }
 
 void loop() {
   // Update sensor.
   heart.update();
   unsigned long currentMillis = millis();    // update time
+  if (currentMillis%printInterval == 0) {  //impose a delay to avoid taxing your serial port
   
-  // Print-out different information.  
-  Serial.print(heart.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
-                                       // Note that if signal amplitude changes drastically the beat detection may
-                                       // pause while the normalization process recalibrates
-                                       
-  Serial.print("\t");                  // tab separated values
-  
-  Serial.print(heart.getBPM());  
-  Serial.print("\t");
-  
-  Serial.print(heart.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
-                                      // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-  Serial.print("\t");
-  Serial.println(heart.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
+    // Print-out different information.  
+    Serial.print(heart.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
+                                         // Note that if signal amplitude changes drastically the beat detection may
+                                         // pause while the normalization process recalibrates
+                                         
+    Serial.print("\t");                  // tab separated values
+    
+    Serial.print(heart.getBPM());  
+    Serial.print("\t");
+    
+    Serial.print(heart.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
                                         // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-                                     
+    Serial.print("\t");
+    Serial.println(heart.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
+                                          // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
+  }                                   
   // An example of how to do something when a heartbeat is detected.
   // Remember that you should avoid using delays in order to preserve samplerate.
   

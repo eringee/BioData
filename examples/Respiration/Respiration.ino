@@ -26,7 +26,9 @@ int counter;  // counter for timing routine without using delay
 int LED = 13; // onboard LED
 unsigned long litMillis = 0;        // will store how long LED was lit up
 const long ledInterval = 50;        // interval at which to blink LED (milliseconds)
-const long printInterval = 1;       // interval optimal for viewing on arduino serial plotter
+
+//variable for attenuating data flow to serial port prevents crashes
+const long printInterval = 20;       // millis
 
 boolean doOnce = true;    // for only performing actions once when breath is detected
 
@@ -39,14 +41,18 @@ void setup() {
   
   // Initialize sensor.
   resp.reset();
+
+  // uncomment below to redefine samplerate, default is 200Hz  
+  //resp.setSampleRate(200); 
 }
 
 void loop() {
-  // Update sensor.
+  // Update sensor. 
   resp.update();
+  
   unsigned long currentMillis = millis();    // update time
 
-  if (currentMillis%printInterval == 0) {  //impose a delay to avoid taxing your serial port
+  if (currentMillis%printInterval == 0) {  //to avoid crashing serial port
   // Print-out different information.  
   
     //Serial.print(resp.getRaw());  
