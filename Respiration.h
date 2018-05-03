@@ -75,7 +75,7 @@ class Respiration {
   unsigned long prevSampleMicros;
 
 public:
-  Respiration(uint8_t pin, unsigned long rate=10);
+  Respiration(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
   virtual ~Respiration() {}
 
   /// Resets all values.

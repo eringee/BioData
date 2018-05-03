@@ -77,7 +77,7 @@ class Heart {
   unsigned long prevSampleMicros;
 
 public:
-  Heart(uint8_t pin, unsigned long rate=500);
+  Heart(uint8_t pin, unsigned long rate=200); // default samplerate is 200Hz
   virtual ~Heart() {}
 
   void setAmplitudeSmoothing(float smoothing);
