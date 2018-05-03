@@ -34,8 +34,8 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
-respSensorAmplitudeLop(0.0001),  // original value 0.001
-  respSensorBpmLop(0.1)       // original value 0.001
+respSensorAmplitudeLop(0.001),  // original value 0.001
+  respSensorBpmLop(0.001)       // original value 0.001
 {
   setSampleRate(rate);
   reset();
