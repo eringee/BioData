@@ -1,4 +1,8 @@
 // This example demonstrates gathering data relevant to respiration
+
+//Please note that if you are using a large timing capacitor that your circuit
+//will take a few seconds to "warm up"
+
 // for more info see README at https://github.com/eringee/BioData/
 /******************************************************
 copyright Erin Gee 2017
@@ -22,6 +26,7 @@ int counter;  // counter for timing routine without using delay
 int LED = 13; // onboard LED
 unsigned long litMillis = 0;        // will store how long LED was lit up
 const long ledInterval = 50;        // interval at which to blink LED (milliseconds)
+const long printInterval = 1;       // interval optimal for viewing on arduino serial plotter
 
 boolean doOnce = true;    // for only performing actions once when breath is detected
 
@@ -40,24 +45,27 @@ void loop() {
   // Update sensor.
   resp.update();
   unsigned long currentMillis = millis();    // update time
-  
+
+  if (currentMillis%printInterval == 0) {  //impose a delay to avoid taxing your serial port
   // Print-out different information.  
-  
-  Serial.print(resp.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
+  //  Serial.print(resp.getRaw());  
+  //  Serial.print("\t");                  // tab separated values
+    Serial.println(resp.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
                                        // Note that if signal amplitude changes drastically the breath detection may
                                        // pause while the normalization process recalibrates
                                        
-  Serial.print("\t");                  // tab separated values
+ /*   Serial.print("\t");                  // tab separated values
   
-  Serial.print(resp.getBPM());  
-  Serial.print("\t");
+    Serial.print(resp.getBPM());  
+    Serial.print("\t");
   
-  Serial.print(resp.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
+    Serial.print(resp.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
                                       // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-  Serial.print("\t");
-  Serial.println(resp.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
+    Serial.print("\t");
+    Serial.println(resp.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
                                         // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-                                     
+  */
+  }                                  
   // An example of how to do something when a breath is detected.
   // Remember that you should avoid using delays in order to preserve samplerate.
   
