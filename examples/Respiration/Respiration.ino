@@ -48,13 +48,14 @@ void loop() {
 
   if (currentMillis%printInterval == 0) {  //impose a delay to avoid taxing your serial port
   // Print-out different information.  
-  //  Serial.print(resp.getRaw());  
-  //  Serial.print("\t");                  // tab separated values
-    Serial.println(resp.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
+  
+    //Serial.print(resp.getRaw());  
+    //Serial.print("\t");                  // tab separated values
+    Serial.print(resp.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
                                        // Note that if signal amplitude changes drastically the breath detection may
                                        // pause while the normalization process recalibrates
                                        
- /*   Serial.print("\t");                  // tab separated values
+    Serial.print("\t");                  // tab separated values
   
     Serial.print(resp.getBPM());  
     Serial.print("\t");
@@ -64,8 +65,8 @@ void loop() {
     Serial.print("\t");
     Serial.println(resp.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
                                         // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-  */
-  }                                  
+  }   
+                                 
   // An example of how to do something when a breath is detected.
   // Remember that you should avoid using delays in order to preserve samplerate.
   
