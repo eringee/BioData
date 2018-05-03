@@ -42,9 +42,6 @@ void loop() {
   unsigned long currentMillis = millis();    // update time
   
   // Print-out different information.  
-  
-  Serial.println(" ");                 // clears the values to the next line
-  
   Serial.print(heart.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
                                        // Note that if signal amplitude changes drastically the beat detection may
                                        // pause while the normalization process recalibrates
@@ -57,7 +54,7 @@ void loop() {
   Serial.print(heart.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
                                       // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
   Serial.print("\t");
-  Serial.print(heart.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
+  Serial.println(heart.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
                                         // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
                                      
   // An example of how to do something when a heartbeat is detected.
@@ -66,8 +63,6 @@ void loop() {
   if (heart.beatDetected()){  
     digitalWrite(LED, HIGH);
     if (doOnce == true){          // only perform these actions once when a heartbeat is detected
-      Serial.print("\t");
-      Serial.print("Beat!");
       litMillis = currentMillis;
       digitalWrite(LED, HIGH);    // turn on an LED for visual feedback that heartbeat occurred
       doOnce = false;             
