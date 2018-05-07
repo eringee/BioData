@@ -21,7 +21,7 @@ the Free Software Foundation.
 SkinConductance sc(A6);
 
 //variable for attenuating data flow to serial port prevents crashes
-const long printInterval = 20;       // millis
+const long printInterval = 50;       // millis
 
 void setup() {
   Serial.begin(115200);  // make this fast so you don't overflow the buffers
@@ -35,6 +35,7 @@ void setup() {
 void loop() {
   // Update sensor.
   sc.update();
+  unsigned long currentMillis = millis();    // update time
   if (currentMillis%printInterval == 0) {  //to avoid crashing serial port
     // Print-out values.
     Serial.print(sc.getSCR()); // this number changes only when a large enough spike in skin conductivity occurs.

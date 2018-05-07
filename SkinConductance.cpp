@@ -31,19 +31,16 @@
 
 SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
   _pin(pin),
-  GSRaverager(1250),
-  gsrLop(0.001) {
-    setSampleRate(rate);
-    reset();
+  gsrLop(0.01), gsrHip(0.9999){
+  setSampleRate(rate);
+  reset();
 }
 
 void SkinConductance::reset() {
-  GSRaverager.clear();
   gsrSensorReading = 0;
-  GSRmastered = 0;
-  GSRav = 0;
   gsrMinMax = MinMax();
-  gsrLop = Lop(0.001);
+  gsrLop = Lop(0.01);
+  gsrHip = Hip(0.9999);
   gsrSensorFiltered = 0;
   gsrSensorAmplitude = 0;
   gsrSensorLop = 0;
@@ -69,11 +66,11 @@ void SkinConductance::update() {
 }
 
 float SkinConductance::getSCR() const {
-  return GSRmastered;
+    return gsrSensorChange;
 }
 
 float SkinConductance::getSCL() const {
-  return GSRav;
+  return gsrSensorFiltered;
 }
 
 int SkinConductance::getRaw() const {
@@ -87,19 +84,7 @@ void SkinConductance::sample() {
   // Apply filters to the signal.
   gsrSensorLop = gsrLop.filter(gsrSensorReading);
   gsrSensorFiltered = gsrMinMax.filter(gsrSensorLop); // Min max the data
+  gsrSensorChange = gsrHip.filter(gsrSensorFiltered); // Get the change over time with hipass
   gsrMinMax.adapt(0.01);   // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
-
-  // Compute an average GSR over time.
-  // Only the greater than average values matter, shove the lesser than values down quick.
-  if(gsrSensorLop<0) GSRaverager.push(gsrSensorLop-10); // value too low, shove it down
-  else GSRaverager.push(gsrSensorLop);
-
-  // Compute mastered signal.
-  GSRav = GSRaverager.mean();
-  GSRmastered = (gsrSensorLop-GSRav) / 10;
-  // if(gsrSensorLop>GSRmax) GSRmax = gsrSensorLop;      //keep track of the latest max value
-  // else GSRmax = (GSRaverager.maximum(&maxat));
-
-  // Keep the mapping within 0..1 range
-  GSRmastered = constrain(GSRmastered, 0, 1);
+  gsrSensorChange = constrain(gsrSensorChange, 0, 1);
 }

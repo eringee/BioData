@@ -30,6 +30,8 @@
 #include "Average.h"
 #include "MinMax.h"
 #include "Lop.h"
+#include "Hip.h"
+
 
 #ifndef SKIN_CONDUCTANCE_H_
 #define SKIN_CONDUCTANCE_H_
@@ -38,14 +40,12 @@ class SkinConductance {
 
   // Analog pin the SC sensor is connected to.
   uint8_t _pin;
-
-  Average<float> GSRaverager;
   int gsrSensorReading;
-  float GSRmastered;   //The final GSR value that you will send to serial
-  float GSRav;
   MinMax gsrMinMax;
   Lop gsrLop;
+  Hip gsrHip;
   float gsrSensorFiltered;
+  float gsrSensorChange;
   float gsrSensorAmplitude;
   float gsrSensorLop;
 
