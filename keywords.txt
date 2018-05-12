@@ -4,6 +4,8 @@ SkinConductance	KEYWORD1
 setSampleRate	KEYWORD2
 update	KEYWORD2
 reset	KEYWORD2
+Lop KEYWORD2
+Hip KEYWORD2
 getNormalized	KEYWORD2
 getRaw	KEYWORD2
 bpmChange	KEYWORD2
