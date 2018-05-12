@@ -44,10 +44,15 @@ class SkinConductance {
   MinMax gsrMinMax;
   Lop gsrLop;
   Hip gsrHip;
+  Lop gsrLop2;
+  Lop gsrLop3;
   float gsrSensorFiltered;
+  float gsrSensorLopFiltered;
   float gsrSensorChange;
+  float gsrSensorChangeFiltered;
   float gsrSensorAmplitude;
   float gsrSensorLop;
+  float gsrSensorLopassed;
 
   // Sample rate in Hz.
   unsigned long sampleRate;

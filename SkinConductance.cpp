@@ -31,7 +31,7 @@
 
 SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
   _pin(pin),
-  gsrLop(0.01), gsrHip(0.9999){
+  gsrLop(0.0001), gsrHip(0.9999), gsrLop2(0.5), gsrLop3(0.001){
   setSampleRate(rate);
   reset();
 }
@@ -39,11 +39,16 @@ SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
 void SkinConductance::reset() {
   gsrSensorReading = 0;
   gsrMinMax = MinMax();
-  gsrLop = Lop(0.01);
-  gsrHip = Hip(0.9999);
+  gsrLop = Lop(0.01);    //Lop(0.01) is good low pass for the signal
+  gsrLop2 = Lop(0.03);
+  gsrLop3 = Lop(0.005);
+  gsrHip = Hip(0.5);
+  
   gsrSensorFiltered = 0;
+  gsrSensorLopFiltered = 0;
   gsrSensorAmplitude = 0;
-  gsrSensorLop = 0;
+  gsrSensorLopassed = 0;
+  gsrSensorChangeFiltered = 0;
 
   prevSampleMicros = micros();
 
@@ -70,7 +75,7 @@ float SkinConductance::getSCR() const {
 }
 
 float SkinConductance::getSCL() const {
-  return gsrSensorFiltered;
+    return gsrSensorLopassed;
 }
 
 int SkinConductance::getRaw() const {
@@ -78,13 +83,17 @@ int SkinConductance::getRaw() const {
 }
 
 void SkinConductance::sample() {
-  // Read sensor value and invert it.
-  gsrSensorReading = 1023 - analogRead(_pin);
-
-  // Apply filters to the signal.
-  gsrSensorLop = gsrLop.filter(gsrSensorReading);
-  gsrSensorFiltered = gsrMinMax.filter(gsrSensorLop); // Min max the data
-  gsrSensorChange = gsrHip.filter(gsrSensorFiltered); // Get the change over time with hipass
-  gsrMinMax.adapt(0.01);   // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
-  gsrSensorChange = constrain(gsrSensorChange, 0, 1);
+    // Read sensor value and invert it.
+    gsrSensorReading = 1023 - analogRead(_pin);
+    
+    // Smooth out the signal a bit
+    gsrSensorLop = gsrLop.filter(gsrSensorReading);
+    //gsrSensorLopassed = gsrLop3.filter(gsrSensorReading);
+    gsrSensorLopassed = map(gsrLop3.filter(gsrSensorReading), 0,1023,0,1000) / 1000.0;
+    // Min max the data
+    gsrSensorFiltered = gsrMinMax.filter(gsrSensorLop);
+    gsrSensorAmplitude = gsrMinMax.getMax() - gsrMinMax.getMin(); // keep track of the amplitude of the signal
+    if (gsrSensorAmplitude > 8) gsrMinMax.reset();  // if the signal moves around by 8 ADC values reset minmax
+    gsrSensorChange = gsrLop2.filter(gsrSensorFiltered);  // Smooth out the minmaxed data
+    
 }
