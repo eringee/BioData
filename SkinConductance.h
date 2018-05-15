@@ -36,16 +36,13 @@
 #ifndef SKIN_CONDUCTANCE_H_
 #define SKIN_CONDUCTANCE_H_
 
+
 class SkinConductance {
 
   // Analog pin the SC sensor is connected to.
   uint8_t _pin;
   int gsrSensorReading;
-  MinMax gsrMinMax;
-  Lop gsrLop;
-  Hip gsrHip;
-  Lop gsrLop2;
-  Lop gsrLop3;
+
   float gsrSensorFiltered;
   float gsrSensorLopFiltered;
   float gsrSensorChange;

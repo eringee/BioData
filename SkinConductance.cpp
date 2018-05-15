@@ -29,20 +29,19 @@
  */
 #include "SkinConductance.h"
 
+
+float alpha_1 = 0.05;
+float alpha_2 = 0.0075;
+
 SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
-  _pin(pin),
-  gsrLop(0.05), gsrHip(0.9999), gsrLop2(0.5), gsrLop3(0.01){
+  _pin(pin)
+{
   setSampleRate(rate);
   reset();
 }
 
 void SkinConductance::reset() {
   gsrSensorReading = 0;
-  gsrMinMax = MinMax();
-  gsrLop = Lop(0.05);    
-  gsrLop2 = Lop(0.03);
-  gsrLop3 = Lop(0.01);
-  gsrHip = Hip(0.5);
   
   gsrSensorFiltered = 0;
   gsrSensorLopFiltered = 0;
@@ -75,11 +74,11 @@ float SkinConductance::getSCR() const {
 }
 
 float SkinConductance::getSCL() const {
-    return gsrSensorFiltered;
+    return gsrSensorLopFiltered;
 }
 
 int SkinConductance::getRaw() const {
-  return gsrSensorLop;
+  return gsrSensorReading;
 }
 
 void SkinConductance::sample() {
@@ -87,10 +86,14 @@ void SkinConductance::sample() {
     gsrSensorReading = 1023 - analogRead(_pin);
     
     // Smooth out the signals that you compare to one another and map between 0 and 1000
-    gsrSensorLop = map(gsrSensorLop.filter(gsrSensorReading), 0, 1023, 0, 1000);
-    gsrSensorLopassed = map(gsrLop3.filter(gsrSensorReading), 0,1023,0,1000);
     
-    gsrSensorChange = ((gsrSensorLop - gsrSensorLopassed)/10)+0.1;
+    gsrSensorLop = alpha_1*gsrSensorReading + (1 - alpha_1)*gsrSensorLop;
+    gsrSensorLopassed = alpha_2*gsrSensorLop + (1 - alpha_2)*gsrSensorLopassed;
+    
+    gsrSensorChange = ((gsrSensorLop - gsrSensorLopassed)/10)+0.2;
+
+    gsrSensorLopFiltered = map(gsrSensorLop, 0, 1023, 0, 1000)*0.001;
+
     gsrSensorChange = constrain(gsrSensorChange, 0, 1);
     
 }
