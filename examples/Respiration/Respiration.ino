@@ -33,7 +33,7 @@ const long printInterval = 20;       // millis
 boolean doOnce = true;    // for only performing actions once when breath is detected
 
 void setup() {
-  Serial.begin(115200);  // make this fast so you don't overflow the buffers 
+  Serial.begin(9600);  // works best in testing with 9600 or lower
   
   //optional LED for displaying breath
   pinMode(LED, OUTPUT);

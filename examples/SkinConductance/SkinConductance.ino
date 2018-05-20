@@ -24,7 +24,7 @@ SkinConductance sc(A6);
 const long printInterval = 50;       // millis
 
 void setup() {
-  Serial.begin(115200);  // make this fast so you don't overflow the buffers
+  Serial.begin(9600);  // works best in testing with 9600 or lower
 
   // Initialize sensor.
   sc.reset();
