@@ -28,123 +28,123 @@
 #include "Heart.h"
 
 Heart::Heart(uint8_t pin, unsigned long rate) :
-  _pin(pin),
-  heartThresh(0.3, 0.6),              // if signal does not fall below (low, high) bounds than signal is ignored
-  heartSensorAmplitudeLop(0.001),
-  heartSensorBpmLop(0.001),
-  heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
-  heartSensorBpmLopValueMinMaxSmoothing(0.001),
-  heartMinMaxSmoothing(0.01)
+_pin(pin),
+heartThresh(0.25, 0.4),              // if signal does not fall below (low, high) bounds than signal is ignored
+heartSensorAmplitudeLop(0.001),
+heartSensorBpmLop(0.001),
+heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
+heartSensorBpmLopValueMinMaxSmoothing(0.001),
+heartMinMaxSmoothing(0.01)
 {
-  setSampleRate(rate);
-  reset();
+    setSampleRate(rate);
+    reset();
 }
 
 void Heart::setAmplitudeSmoothing(float smoothing)
 {
-  heartSensorAmplitudeLop.setSmoothing(smoothing);
+    heartSensorAmplitudeLop.setSmoothing(smoothing);
 }
 
 void Heart::setBpmSmoothing(float smoothing)
 {
-  heartSensorBpmLop.setSmoothing(smoothing);
+    heartSensorBpmLop.setSmoothing(smoothing);
 }
 
 void Heart::setAmplitudeMinMaxSmoothing(float smoothing)
 {
-  heartSensorAmplitudeLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorAmplitudeLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
 }
 
 void Heart::setBpmMinMaxSmoothing(float smoothing)
 {
-  heartSensorBpmLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorBpmLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
 }
 
 void Heart::setMinMaxSmoothing(float smoothing)
 {
-  heartMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartMinMaxSmoothing = constrain(smoothing, 0, 1);
 }
 
 void Heart::reset() {
-  heartMinMax.reset();
-  heartSensorAmplitudeLop.reset();
-  heartSensorBpmLop.reset();
-  heartSensorAmplitudeLopValueMinMax.reset();
-  heartSensorBpmLopValueMinMax.reset();
-
-  heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
-  bpmChronoStart = millis();
-
-  bpm = 60;
-  beat = false;
-
-  prevSampleMicros = micros();
-
-  // Perform one update.
-  sample();
+    heartMinMax.reset();
+    heartSensorAmplitudeLop.reset();
+    heartSensorBpmLop.reset();
+    heartSensorAmplitudeLopValueMinMax.reset();
+    heartSensorBpmLopValueMinMax.reset();
+    
+    heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
+    bpmChronoStart = millis();
+    
+    bpm = 60;
+    beat = false;
+    
+    prevSampleMicros = micros();
+    
+    // Perform one update.
+    sample();
 }
 
 void Heart::setSampleRate(unsigned long rate) {
-  sampleRate = rate;
-  microsBetweenSamples = 1000000UL / sampleRate;
+    sampleRate = rate;
+    microsBetweenSamples = 1000000UL / sampleRate;
 }
 
 void Heart::update() {
-  unsigned long t = micros();
-  if (t - prevSampleMicros >= microsBetweenSamples) {
-    // Perform updates.
-    sample();
-    prevSampleMicros = t;
-  }
+    unsigned long t = micros();
+    if (t - prevSampleMicros >= microsBetweenSamples) {
+        // Perform updates.
+        sample();
+        prevSampleMicros = t;
+    }
 }
 
 float Heart::getNormalized() const {
-  return heartSensorFiltered;
+    return heartSensorFiltered;
 }
 
 float Heart::amplitudeChange() const {
-  return heartSensorAmplitudeLopValueMinMaxValue;
+    return heartSensorAmplitudeLopValueMinMaxValue;
 }
 
 float Heart::bpmChange() const {
-  return heartSensorBpmLopValueMinMaxValue;
+    return heartSensorBpmLopValueMinMaxValue;
 }
 
 bool Heart::beatDetected() const {
-  return beat;
+    return beat;
 }
 
 float Heart::getBPM() const {
-  return bpm;
+    return bpm;
 }
 
 int Heart::getRaw() const {
-  return heartSensorReading;
+    return heartSensorReading;
 }
 
 void Heart::sample() {
-  // Read analog value if needed.
-  heartSensorReading = analogRead(_pin);
-
-  heartSensorFiltered = heartMinMax.filter(heartSensorReading);
-  heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
-  heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
-
-  heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
-  heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
-
-  heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
-  heartSensorAmplitudeLopValueMinMax.adapt(heartSensorAmplitudeLopValueMinMaxSmoothing);
-  heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
-  heartSensorBpmLopValueMinMax.adapt(heartSensorBpmLopValueMinMaxSmoothing);
-
-  beat = heartThresh.detect(heartSensorFiltered);
-
-  if ( beat ) {
-    unsigned long ms = millis();
-    float temporaryBpm = 60000. / (ms - bpmChronoStart);
-    bpmChronoStart = ms;
-    if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is within bounds
-      bpm = temporaryBpm;
-  }
+    // Read analog value if needed.
+    heartSensorReading = analogRead(_pin);
+    
+    heartSensorFiltered = heartMinMax.filter(heartSensorReading);
+    heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
+    heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+    
+    heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
+    heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
+    
+    heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
+    heartSensorAmplitudeLopValueMinMax.adapt(heartSensorAmplitudeLopValueMinMaxSmoothing);
+    heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
+    heartSensorBpmLopValueMinMax.adapt(heartSensorBpmLopValueMinMaxSmoothing);
+    
+    beat = heartThresh.detect(heartSensorFiltered);
+    
+    if ( beat ) {
+        unsigned long ms = millis();
+        float temporaryBpm = 60000. / (ms - bpmChronoStart);
+        bpmChronoStart = ms;
+        if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is within bounds
+            bpm = temporaryBpm;
+    }
 }

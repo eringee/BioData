@@ -30,8 +30,8 @@
 #include "SkinConductance.h"
 
 
-float alpha_1 = 0.05;
-float alpha_2 = 0.0075;
+float alpha_1 = 0.01;
+float alpha_2 = 0.005;
 
 SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
   _pin(pin)
