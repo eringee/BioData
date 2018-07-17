@@ -20,7 +20,7 @@ If you are using a Teensy, make sure that you also have [Teensyduino](https://ww
 To gather __pulse data__ I use the [Pulse Sensor](https://pulsesensor.com/) connected to a 3.3V power source. Be aware that your results may vary with a 5V signal.
 
 # BASIC EXAMPLE
-```
+```c++
 #include <Heart.h>
 
 // Create instance for sensor on analog input pin.
