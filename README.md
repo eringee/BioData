@@ -1,5 +1,5 @@
 # BioData
-An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat. This code is tested on a [Pulse Sensor](https://pulsesensor.com/) connected to 3.3V power source. Be aware that your results may vary with a 5V signal.
+An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat. This code is tested on my own respiration and GSR circuitry (image included above) as well as with a [Pulse Sensor](https://pulsesensor.com/) connected to 3.3V power source. Be aware that your results may vary with a 5V signal.
 
 [Download the Sourcecode Here](https://github.com/eringee/BioData/archive/master.zip)
 
@@ -17,9 +17,9 @@ https://www.pjrc.com/teensy/
 
 If you are using a Teensy, make sure that you also have [Teensyduino](https://www.pjrc.com/teensy/td_download.html) installed.
 
-To gather __pulse data__ I use the [Pulse Sensor](https://pulsesensor.com/) connected to a 3.3V power source. Be aware that your results may vary with a 5V signal.
+To gather __pulse data__ I use the [Pulse Sensor](https://pulsesensor.com/) connected to a 3.3V power source. Be aware that your results may vary when using this library with a 5V signal.
 
-# BASIC EXAMPLE
+# BASIC EXAMPLE USING HEART
 ```c++
 #include <Heart.h>
 
@@ -58,4 +58,4 @@ void loop() {
 # COPYING AND GENERAL USE
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-Released under GNU GPL 3.0 License.  Copyright Erin Gee 2017.
+Released under GNU GPL 3.0 License.  Copyright Erin Gee 2018.
