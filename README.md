@@ -7,7 +7,7 @@ An Arduino library for interpreting biological signals, BioData makes it easier 
 
 Copy the BioData folder to your Arduino or Wiring libraries folder or download it with the Arduino library manager. 
 
-Code verified on Arduino 1.8.1 
+Code verified on Arduino 1.8.5 
 
 https://www.arduino.cc/
 
