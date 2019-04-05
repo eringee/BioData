@@ -52,7 +52,7 @@ class MinMax {
       min += (input - min) * lop;
       max += (input - max) * lop;
     }
-
+    
     float filter(float f) {
 
       input = f;

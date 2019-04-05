@@ -97,8 +97,9 @@ int Respiration::getRaw() const {
 
 void Respiration::sample() {
   // Read analog value if needed.
+  respSensorReading = analogRead(_pin); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = analogRead(_pin);
-
+  
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
   respMinMax.adapt(0.05); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
@@ -110,10 +111,10 @@ void Respiration::sample() {
   respSensorAmplitudeLopValueMinMax.adapt(0.001);// original value 0.001
   respSensorBpmLopValueMinMaxValue = respSensorBpmLopValueMinMax.filter(respSensorBpmLopValue);
   respSensorBpmLopValueMinMax.adapt(0.001); // original value 0.001
-  
+
 
   breath = respThresh.detect(respSensorFiltered);
-  
+
   if ( breath ) {
     unsigned long ms = millis();
     float temporaryBpm = 60000. / (ms - bpmChronoStart);  // divide by 60 seconds

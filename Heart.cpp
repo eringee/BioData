@@ -34,7 +34,7 @@ heartSensorAmplitudeLop(0.001),
 heartSensorBpmLop(0.001),
 heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
 heartSensorBpmLopValueMinMaxSmoothing(0.001),
-heartMinMaxSmoothing(0.01)
+heartMinMaxSmoothing(0.1)
 {
     setSampleRate(rate);
     reset();
@@ -71,15 +71,15 @@ void Heart::reset() {
     heartSensorBpmLop.reset();
     heartSensorAmplitudeLopValueMinMax.reset();
     heartSensorBpmLopValueMinMax.reset();
-    
+
     heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
     bpmChronoStart = millis();
-    
+
     bpm = 60;
     beat = false;
-    
+
     prevSampleMicros = micros();
-    
+
     // Perform one update.
     sample();
 }
@@ -124,22 +124,23 @@ int Heart::getRaw() const {
 
 void Heart::sample() {
     // Read analog value if needed.
+    heartSensorReading = analogRead(_pin);  //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
     heartSensorReading = analogRead(_pin);
-    
+
     heartSensorFiltered = heartMinMax.filter(heartSensorReading);
     heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
     heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
-    
+
     heartSensorAmplitudeLopValue = heartSensorAmplitudeLop.filter(heartSensorAmplitude);
     heartSensorBpmLopValue =  heartSensorBpmLop.filter(bpm);
-    
+
     heartSensorAmplitudeLopValueMinMaxValue = heartSensorAmplitudeLopValueMinMax.filter(heartSensorAmplitudeLopValue);
     heartSensorAmplitudeLopValueMinMax.adapt(heartSensorAmplitudeLopValueMinMaxSmoothing);
     heartSensorBpmLopValueMinMaxValue = heartSensorBpmLopValueMinMax.filter(heartSensorBpmLopValue);
     heartSensorBpmLopValueMinMax.adapt(heartSensorBpmLopValueMinMaxSmoothing);
-    
+
     beat = heartThresh.detect(heartSensorFiltered);
-    
+
     if ( beat ) {
         unsigned long ms = millis();
         float temporaryBpm = 60000. / (ms - bpmChronoStart);
