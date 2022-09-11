@@ -42,6 +42,15 @@ void loop() {
   Serial.println();
 }
 ```
+
+# Circuit Design
+
+Refer to the [assembly listing](ASSEMBLY-biodatatrio3.0.pdf) to gather all the parts.
+
+Schematics:
+![BioSynth Schematics](extra/GEE-BioSynthv3-schematics2018.jpg)
+
+
 # Credits
 
 Main Developer: [Erin Gee](http://www.eringee.net)
