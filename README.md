@@ -2,8 +2,6 @@
 
 An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat. This code is tested on my own respiration and GSR circuitry (image included above) as well as with a [Pulse Sensor](https://pulsesensor.com/) connected to 3.3V power source. Be aware that your results may vary with a 5V signal.
 
-[Download the Sourcecode Here](https://github.com/eringee/BioData/archive/master.zip)
-
 ## Installation
 
 Copy the BioData folder to your Arduino or Wiring libraries folder or download it with the Arduino library manager.
