@@ -9,8 +9,8 @@
  *
  * Contributing authors:
  * (c) 2018 Erin Gee
- * (c) 2018 Sofian Audry
  * (c) 2017 Thomas Ouellet Fredericks
+ * (c) 2018 Sofian Audry
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
