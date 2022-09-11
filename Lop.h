@@ -63,6 +63,11 @@ public:
     nCalibration = int(2 / alpha - 1);
   }
 
+  /// Sets smoothing using a number of samples instead of smoothing value.
+  void setSmoothingBySamples(unsigned int nSamples) {
+    setSmoothing(2.0 / (nSamples+1));
+  }
+
   /// Filters sample and returns smoothed value.
   float filter(float input) {
     // For the first #nCalibration# samples just compute the average.
