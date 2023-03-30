@@ -6,9 +6,7 @@ An Arduino library for interpreting biological signals, BioData makes it easier 
 
 Copy the BioData folder to your Arduino or Wiring libraries folder or download it with the Arduino library manager.
 
-Code verified on [Arduino 1.8.5](https://www.arduino.cc/) on a [Teensy 3.2](https://www.pjrc.com/teensy/) microcontroller.
-
-If you are using a Teensy, make sure that you also have [Teensyduino](https://www.pjrc.com/teensy/td_download.html) installed.
+Code verified on [Arduino 2.0.3](https://www.arduino.cc/) on a [Teensy 3.2](https://www.pjrc.com/teensy/) microcontroller.
 
 ## Basic Example Using Heart
 
@@ -45,7 +43,7 @@ void loop() {
 
 # Circuit Design
 
-Refer to the [assembly listing](ASSEMBLY-biodatatrio3.0.pdf) to gather all the parts.
+Refer to the [assembly listing](ASSEMBLY-biodatatrio3.0.pdf) for the parts.
 
 Schematics:
 ![BioSynth Schematics](extra/GEE-BioSynthv3-schematics2018.jpg)
