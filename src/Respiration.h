@@ -42,7 +42,7 @@ class Respiration {
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
 
-  ADS1115 ADS;
+  ADS1X15 ADS;
 
   unsigned long bpmChronoStart;
 
