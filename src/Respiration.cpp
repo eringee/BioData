@@ -43,7 +43,7 @@ respSensorAmplitudeLop(0.001),  // original value 0.001
   reset();
 }
 
-void Respiration_::reset() {
+void Respiration::reset() {
   ADS.begin();
   ADS.setGain(1);
 
