@@ -32,7 +32,6 @@
 
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
-  ADS(0x49),
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
