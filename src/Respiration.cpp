@@ -106,7 +106,6 @@ void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.readADC(2); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.readADC(2);
-  Serial.println(respSensorReading);
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
