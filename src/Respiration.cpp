@@ -33,10 +33,7 @@
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
 // look for center of min max signal - false triggers from noise are unlikely
-respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
-
-respSensorAmplitudeLop(0.001),  // original value 0.001
-  respSensorBpmLop(0.001)       // original value 0.001
+   // original value 0.001
 {
   setSampleRate(rate);
   reset();
@@ -46,11 +43,7 @@ void Respiration::reset() {
   ADS.begin();
   ADS.setGain(1);
 
-  respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
-  respSensorBpmLop = Lop(0.001);        // original value 0.001
-  respSensorAmplitudeLopValueMinMax = MinMax();
-  respSensorBpmLopValueMinMax = MinMax();
-  respSensorReading = respSensorFiltered = respSensorAmplitude = 0;
+
   bpmChronoStart = millis();   // Note that in this case, BPM refers to "breaths per minute"  ;)
   bpm = 12;
   breath = false;
