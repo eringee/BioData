@@ -30,7 +30,7 @@
 #include <ADS1X15.h>
 
 
-Respiration_::Respiration(uint8_t pin, unsigned long rate) :
+Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
   ADS(0x49),
 // look for center of min max signal - false triggers from noise are unlikely
