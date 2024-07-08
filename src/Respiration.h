@@ -28,6 +28,7 @@
  */
 #include <Arduino.h>
 #include <ADS1X15.h>
+#include <Wire.h>  
 
 #include "Average.h"
 #include "MinMax.h"
@@ -42,7 +43,7 @@ class Respiration {
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
 
-  ADS1X15 ADS;
+  ADS1115 ADS;
 
   unsigned long bpmChronoStart;
 
