@@ -37,7 +37,7 @@
 #ifndef RESP_H_
 #define RESP_H_
 
-class Respiration_ {
+class Respiration {
 
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
@@ -80,8 +80,8 @@ class Respiration_ {
   unsigned long prevSampleMicros;
 
 public:
-  Respiration_(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
-  virtual ~Respiration_() {}
+  Respiration(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
+  virtual ~Respiration() {}
 
   /// Resets all values.
   void reset();

@@ -30,7 +30,7 @@
 #include <ADS1X15.h>
 
 
-Respiration_::Respiration_(uint8_t pin, unsigned long rate) :
+Respiration_::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
   ADS(0x49),
 // look for center of min max signal - false triggers from noise are unlikely
@@ -62,12 +62,12 @@ void Respiration_::reset() {
   sample();
 }
 
-void Respiration_::setSampleRate(unsigned long rate) {
+void Respiration::setSampleRate(unsigned long rate) {
   sampleRate = rate;
   microsBetweenSamples = 1000000UL / sampleRate;  //
 }
 
-void Respiration_::update() {
+void Respiration::update() {
   unsigned long t = micros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
@@ -76,31 +76,31 @@ void Respiration_::update() {
   }
 }
 
-float Respiration_::getNormalized() const {
+float Respiration::getNormalized() const {
   return respSensorFiltered;
 }
 
-float Respiration_::amplitudeChange() const {
+float Respiration::amplitudeChange() const {
   return respSensorAmplitudeLopValueMinMaxValue;
 }
 
-float Respiration_::bpmChange() const {
+float Respiration::bpmChange() const {
   return respSensorBpmLopValueMinMaxValue;
 }
 
-bool Respiration_::breathDetected() const {
+bool Respiration::breathDetected() const {
   return breath;
 }
 
-float Respiration_::getBPM() const {
+float Respiration::getBPM() const {
   return bpm;
 }
 
-int Respiration_::getRaw()  const {
+int Respiration::getRaw()  const {
 return respSensorReading ;
 }
 
-void Respiration_::sample() {
+void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.readADC(2); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.readADC(2);
