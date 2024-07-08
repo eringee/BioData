@@ -27,10 +27,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Respiration.h"
+#include <ADS1X15.h>
 
-Respiration::Respiration(uint8_t pin, unsigned long rate) :
+
+Respiration_::Respiration_(uint8_t pin, unsigned long rate) :
   _pin(pin),
-
+  ADS(0x49),
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
@@ -41,7 +43,10 @@ respSensorAmplitudeLop(0.001),  // original value 0.001
   reset();
 }
 
-void Respiration::reset() {
+void Respiration_::reset() {
+  ADS.begin();
+  ADS.setGain(1);
+
   respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
   respSensorBpmLop = Lop(0.001);        // original value 0.001
   respSensorAmplitudeLopValueMinMax = MinMax();
@@ -57,12 +62,12 @@ void Respiration::reset() {
   sample();
 }
 
-void Respiration::setSampleRate(unsigned long rate) {
+void Respiration_::setSampleRate(unsigned long rate) {
   sampleRate = rate;
   microsBetweenSamples = 1000000UL / sampleRate;  //
 }
 
-void Respiration::update() {
+void Respiration_::update() {
   unsigned long t = micros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
@@ -71,34 +76,35 @@ void Respiration::update() {
   }
 }
 
-float Respiration::getNormalized() const {
+float Respiration_::getNormalized() const {
   return respSensorFiltered;
 }
 
-float Respiration::amplitudeChange() const {
+float Respiration_::amplitudeChange() const {
   return respSensorAmplitudeLopValueMinMaxValue;
 }
 
-float Respiration::bpmChange() const {
+float Respiration_::bpmChange() const {
   return respSensorBpmLopValueMinMaxValue;
 }
 
-bool Respiration::breathDetected() const {
+bool Respiration_::breathDetected() const {
   return breath;
 }
 
-float Respiration::getBPM() const {
+float Respiration_::getBPM() const {
   return bpm;
 }
 
-int Respiration::getRaw() const {
+int Respiration_::getRaw()  {
   return respSensorReading;
 }
 
-void Respiration::sample() {
+void Respiration_::sample() {
   // Read analog value if needed.
-  respSensorReading = analogRead(_pin); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-  respSensorReading = analogRead(_pin);
+  // respSensorReading = ADS.readADC(2); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
+  respSensorReading = ADS.readADC(2);
+  Serial.println(respSensorReading);
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();

@@ -27,6 +27,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
+#include <ADS1X15.h>
 
 #include "Average.h"
 #include "MinMax.h"
@@ -36,10 +37,12 @@
 #ifndef RESP_H_
 #define RESP_H_
 
-class Respiration {
+class Respiration_ {
 
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
+
+  ADS1115 ADS;
 
   unsigned long bpmChronoStart;
 
@@ -77,8 +80,8 @@ class Respiration {
   unsigned long prevSampleMicros;
 
 public:
-  Respiration(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
-  virtual ~Respiration() {}
+  Respiration_(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
+  virtual ~Respiration_() {}
 
   /// Resets all values.
   void reset();
@@ -103,7 +106,7 @@ public:
   float getBPM() const;
 
   /// Returns raw signal as returned by analogRead().
-  int getRaw() const;
+  int getRaw() ;
 
   ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
   /* For example, if amplitude is average, returns 0.5,
