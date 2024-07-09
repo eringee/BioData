@@ -27,7 +27,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
-#include <ADS1X15.h>
+#include "ADS1115.h"
 #include <Wire.h>  
 
 #include "Average.h"

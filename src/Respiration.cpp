@@ -27,7 +27,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Respiration.h"
-#include <ADS1X15.h>
+#include "ExternalADC.h"
 
 
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
