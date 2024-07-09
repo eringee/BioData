@@ -47,7 +47,10 @@ void Respiration::reset() {
   Wire.begin();
   Wire.setClock(400000);   
   ADS.begin();
-  ADS.setGain(1);
+  ADS.setGain(1);    //  6.144 volt
+  ADS.setDataRate(4);  //  0 = slow   4 = medium   7 = fast
+  ADS.setMode(0);      //  continuous mode
+  ADS.readADC(2);  
 
   respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
   respSensorBpmLop = Lop(0.001);        // original value 0.001
@@ -104,8 +107,8 @@ return respSensorReading ;
 
 void Respiration::sample() {
   // Read analog value if needed.
-  // respSensorReading = ADS.readADC(2); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-  respSensorReading = ADS.readADC(2);
+  // respSensorReading = ADS.getValue(); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
+  respSensorReading = ADS.getValue();
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
