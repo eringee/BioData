@@ -114,11 +114,11 @@ protected:
   float _OFFSET_TEMP;
   NTC_CONNECT_t _NTC_CONNECT;
   int32_t _EXCITE_VALUE;
+  float _V_IN;
+  float _ADC_GAIN;
   int adcValue;
   float resistance;
   float temperature;
-  float _V_IN;
-  float _ADC_GAIN;
 };
 
 #endif
