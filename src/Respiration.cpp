@@ -27,13 +27,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Respiration.h"
-#include "ExternalADC.h"
-
 
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
    ADS(pin),                     // 0x49 is the I2C address we chose (see ADS1115 datasheet for specifications)
-
+  SHthermistor(),               // thermistor
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
@@ -99,14 +97,19 @@ float Respiration::getBPM() const {
   return bpm;
 }
 
-int Respiration::getRaw()  const {
+int Respiration::getADC()  const {
 return respSensorReading ;
+}
+
+float Respiration::getTemperature()  const {
+return temperature ;
 }
 
 void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.getValue(); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.getValue();
+  temperature = SHthermistor.readTemp(respSensorReading);
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
