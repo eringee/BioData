@@ -44,7 +44,7 @@ class Respiration {
   uint8_t _pin;
 
   ADS1115 ADS;
-  SHthermistor SHthermistor;
+  SHthermistor thermistor;
 
   unsigned long bpmChronoStart;
 

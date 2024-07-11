@@ -31,7 +31,7 @@
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
    ADS(pin),                     // 0x49 is the I2C address we chose (see ADS1115 datasheet for specifications)
-  SHthermistor(),               // thermistor
+  thermistor(),               // thermistor
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
