@@ -97,7 +97,7 @@ float Respiration::getBPM() const {
   return bpm;
 }
 
-int Respiration::getADC()  const {
+int Respiration::getRaw()  const {
 return respSensorReading ;
 }
 
@@ -109,7 +109,7 @@ void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.getValue(); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.getValue();
-  temperature = SHthermistor.readTemp(respSensorReading);
+  temperature = thermistor.readTemp(respSensorReading);
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();

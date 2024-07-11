@@ -109,7 +109,7 @@ public:
   float getBPM() const;
 
   /// Returns raw ADC signal.
-  int getADC() const;
+  int getRaw() const;
 
   /// Returns temperature signal, converted with Steinhart-Hart equation.
   float getTemperature() const;
