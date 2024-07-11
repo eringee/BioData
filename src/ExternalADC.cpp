@@ -140,6 +140,7 @@ ADS1115::ADS1115(uint8_t pin, uint8_t address, TwoWire *wire)
   _conversionDelay = ADS1115_CONVERSION_DELAY;
   _bitShift = 0;
   _maxPorts = 4;
+  _wire = wire;
 
   reset();
 }
@@ -162,6 +163,10 @@ bool ADS1115::begin()
   if ((_address < 0x48) || (_address > 0x4B)) return false;
   if (! isConnected()) return false;
   return true;
+  
+  if (_mode == ADS1115_MODE_CONTINUE){
+    readADC(_pin);
+  } 
 }
 
 
