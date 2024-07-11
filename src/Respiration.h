@@ -27,7 +27,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
-#include <ADS1X15.h>
+#include "ExternalADC.h"
+#include "TemperatureSH.h"
 #include <Wire.h>  
 
 #include "Average.h"
@@ -39,11 +40,11 @@
 #define RESP_H_
 
 class Respiration {
-
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
 
   ADS1115 ADS;
+  SHthermistor thermistor;
 
   unsigned long bpmChronoStart;
 
@@ -67,6 +68,7 @@ class Respiration {
   float respSensorAmplitude;
 
   float respSensorReading;
+  float temperature;
 
   float bpm;  // this value is fed to initialize your BPM before a breath is detected
 
@@ -106,8 +108,11 @@ public:
   /// Returns BPM (breaths per minute).
   float getBPM() const;
 
-  /// Returns raw signal as returned by analogRead().
+  /// Returns raw ADC signal.
   int getRaw() const;
+
+  /// Returns temperature signal, converted with Steinhart-Hart equation.
+  float getTemperature() const;
 
   ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
   /* For example, if amplitude is average, returns 0.5,

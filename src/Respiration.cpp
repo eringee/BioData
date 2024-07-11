@@ -27,12 +27,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "Respiration.h"
-#include <ADS1X15.h>
-
 
 Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _pin(pin),
-   ADS(0x49),
+   ADS(pin),                     // 0x49 is the I2C address we chose (see ADS1115 datasheet for specifications)
+  thermistor(),               // thermistor
 // look for center of min max signal - false triggers from noise are unlikely
 respThresh(0.5, 0.55),          // if signal does not fall below (low, high) bounds than signal is ignored
 
@@ -46,11 +45,8 @@ respSensorAmplitudeLop(0.001),  // original value 0.001
 void Respiration::reset() {
   Wire.begin();
   Wire.setClock(400000);   
+
   ADS.begin();
-  ADS.setGain(1);    //  6.144 volt
-  ADS.setDataRate(4);  //  0 = slow   4 = medium   7 = fast
-  ADS.setMode(0);      //  continuous mode
-  ADS.readADC(2);  
 
   respSensorAmplitudeLop = Lop(0.001);  // original value 0.001
   respSensorBpmLop = Lop(0.001);        // original value 0.001
@@ -105,10 +101,17 @@ int Respiration::getRaw()  const {
 return respSensorReading ;
 }
 
+float Respiration::getTemperature()  const {
+return temperature ;
+}
+
 void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.getValue(); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.getValue();
+
+  temperature = thermistor.readTemp(respSensorReading);
+
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
