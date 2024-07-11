@@ -1,11 +1,32 @@
 //
-//    FILE: ADS1115.cpp
-//  AUTHOR: Rob Tillaart
-// VERSION: 0.4.5
-//    DATE: 2013-03-24
-// PURPOSE: Arduino library for ADS1015 and ADS1115
-//     URL: https://github.com/RobTillaart/ADS1115
+//    FILE: ADS1115.h
+//  AUTHOR: Luana Belinsky (adapted from ADS1X15 from Rob Tillaart)
+// VERSION: 0.1.0
+//    DATE: 2023-07-09
+// PURPOSE: Library for ADS1115
+//     URL: **
+//
+// MIT License
 
+// Copyright (c) 2013-2024 Rob Tillaart
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
 #include "ExternalADC.h"
 
@@ -32,9 +53,9 @@
 
 
 //  BIT 9-11    gain                         //  (0..5) << 9
-#define ADS1115_PGA_6_144V          0x0000   //  voltage
-#define ADS1115_PGA_4_096V          0x0200   //
-#define ADS1115_PGA_2_048V          0x0400   //  default
+#define ADS1115_PGA_6_144V          0x0000   //  
+#define ADS1115_PGA_4_096V          0x0200   //  default
+#define ADS1115_PGA_2_048V          0x0400   //  
 #define ADS1115_PGA_1_024V          0x0600
 #define ADS1115_PGA_0_512V          0x0800
 #define ADS1115_PGA_0_256V          0x0A00
@@ -101,24 +122,25 @@ differs for different devices, check datasheet or readme.md
 //  |   6   |  -                     |
 //  |   7   |  -                     |
 //
-#define ADS_CONF_CHAN_1  0x00
-#define ADS_CONF_CHAN_4  0x01
-#define ADS_CONF_RES_12  0x00
-#define ADS_CONF_RES_16  0x04
-#define ADS_CONF_NOGAIN  0x00
-#define ADS_CONF_GAIN    0x10
-#define ADS_CONF_NOCOMP  0x00
-#define ADS_CONF_COMP    0x20
-
+#define ADS_CONF_CHAN_4  0x01 // ADS1115 has 4 pin channels
+#define ADS_CONF_RES_16  0x04 // ADS1115 has 16 bit resolution
+#define ADS_CONF_GAIN    0x10 // ADS1115 has gain support
+#define ADS_CONF_COMP    0x20 // ADS1115 has comparator support
 
 //////////////////////////////////////////////////////
 //
 //  BASE CONSTRUCTOR
 //
-ADS1115::ADS1115(uint8_t pin, uint8_t address = ADS1115_ADDRESS, TwoWire *wire)
+ADS1115::ADS1115(uint8_t pin, uint8_t address, TwoWire *wire)
 {
   _pin = pin;
   _address = address;
+  _config = ADS_CONF_COMP | ADS_CONF_GAIN | ADS_CONF_RES_16 | ADS_CONF_CHAN_4;
+
+  _conversionDelay = ADS1115_CONVERSION_DELAY;
+  _bitShift = 0;
+  _maxPorts = 4;
+
   reset();
 }
 
@@ -132,13 +154,6 @@ void ADS1115::reset()
   setGain(1);      //  _gain = ADS1115_PGA_4_096V; 
   setMode(0);      //  _mode = ADS1115_MODE_CONTINUE;
   setDataRate(4);  //  middle speed, depends on device.
-
-  //  COMPARATOR variables   #  see notes .h
-  _compMode       = 0;
-  _compPol        = 1;
-  _compLatch      = 0;
-  _compQueConvert = 3;
-  _lastRequest    = 0xFFFF;  //  no request yet
 }
 
 
@@ -155,7 +170,6 @@ bool ADS1115::isConnected()
   _wire->beginTransmission(_address);
   return (_wire->endTransmission() == 0);
 }
-
 
 void ADS1115::setGain(uint8_t gain)
 {
@@ -263,87 +277,12 @@ bool ADS1115::isReady()
 }
 
 
-
-void ADS1115::setComparatorMode(uint8_t mode)
-{
-  _compMode = mode == 0 ? 0 : 1;
-}
-
-
-uint8_t ADS1115::getComparatorMode()
-{
-  return _compMode;
-}
-
-
-void ADS1115::setComparatorPolarity(uint8_t pol)
-{
-  _compPol = pol ? 0 : 1;
-}
-
-
-uint8_t ADS1115::getComparatorPolarity()
-{
-  return _compPol;
-}
-
-
-void ADS1115::setComparatorLatch(uint8_t latch)
-{
-  _compLatch = latch ? 0 : 1;
-}
-
-
-uint8_t ADS1115::getComparatorLatch()
-{
-  return _compLatch;
-}
-
-
-void ADS1115::setComparatorQueConvert(uint8_t mode)
-{
-  _compQueConvert = (mode < 3) ? mode : 3;
-}
-
-
-uint8_t ADS1115::getComparatorQueConvert()
-{
-  return _compQueConvert;
-}
-
-
-void ADS1115::setComparatorThresholdLow(int16_t lo)
-{
-  _writeRegister(_address, ADS1115_REG_LOW_THRESHOLD, lo);
-}
-
-
-int16_t ADS1115::getComparatorThresholdLow()
-{
-  return _readRegister(_address, ADS1115_REG_LOW_THRESHOLD);
-};
-
-
-void ADS1115::setComparatorThresholdHigh(int16_t hi)
-{
-  _writeRegister(_address, ADS1115_REG_HIGH_THRESHOLD, hi);
-};
-
-
-int16_t ADS1115::getComparatorThresholdHigh()
-{
-  return _readRegister(_address, ADS1115_REG_HIGH_THRESHOLD);
-};
-
-
 int8_t ADS1115::getError()
 {
   int8_t rv = _error;
   _error = ADS1115_OK;
   return rv;
 }
-
-
 
 //////////////////////////////////////////////////////
 //
@@ -384,17 +323,8 @@ void ADS1115::_requestADC(uint16_t readmode)
   config |= _gain;                            //  bit 9-11
   config |= _mode;                            //  bit 8
   config |= _datarate;                        //  bit 5-7
-  if (_compMode)  config |= ADS1115_COMP_MODE_WINDOW;         //  bit 4      comparator modi
-  else            config |= ADS1115_COMP_MODE_TRADITIONAL;
-  if (_compPol)   config |= ADS1115_COMP_POL_ACTIV_HIGH;      //  bit 3      ALERT active value
-  else            config |= ADS1115_COMP_POL_ACTIV_LOW;
-  if (_compLatch) config |= ADS1115_COMP_LATCH;
-  else            config |= ADS1115_COMP_NON_LATCH;           //  bit 2      ALERT latching
-  config |= _compQueConvert;                                  //  bit 0..1   ALERT mode
-  _writeRegister(_address, ADS1115_REG_CONFIG, config);
 
-  //  remember last request type.
-  _lastRequest = readmode;
+  _writeRegister(_address, ADS1115_REG_CONFIG, config);
 }
 
 
@@ -432,26 +362,5 @@ uint16_t ADS1115::_readRegister(uint8_t address, uint8_t reg)
   _error =  ADS1115_ERROR_I2C;
   return 0x0000;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-//
-//  ADS1115
-//
-// ADS1115::ADS1115(uint8_t address, TwoWire *wire)
-// {
-//   _address = address;
-//   _wire = wire;
-//   _config = ADS_CONF_COMP | ADS_CONF_GAIN | ADS_CONF_RES_16 | ADS_CONF_CHAN_4;
-//   _conversionDelay = ADS1115_CONVERSION_DELAY;
-//   _bitShift = 0;
-//   _maxPorts = 4;
-// }
-
-
-
-
-
-
 //  -- END OF FILE --
 

@@ -10,8 +10,6 @@
             "includePath": [
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/include",
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/src",
-                "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/BioData/src",
-                "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/ADS1X15",
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/CircularBuffer",
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/WS2812Serial",
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/LiquidCrystal_I2C",
@@ -20,7 +18,6 @@
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/mtof",
                 "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/Chrono",
                 "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/cores/teensy3",
-                "/Users/luanabelinsky/.platformio/lib/BioData/src",
                 "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/ADC",
                 "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/AccelStepper/src",
                 "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_NeoPixel",
@@ -125,8 +122,6 @@
                 "path": [
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/include",
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/src",
-                    "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/BioData/src",
-                    "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/ADS1X15",
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/CircularBuffer",
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/WS2812Serial",
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/LiquidCrystal_I2C",
@@ -135,7 +130,6 @@
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/mtof",
                     "/Users/luanabelinsky/Documents/GitHub/BioData_Summer_2024/BioData_Summer_2024/.pio/libdeps/teensy31/Chrono",
                     "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/cores/teensy3",
-                    "/Users/luanabelinsky/.platformio/lib/BioData/src",
                     "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/ADC",
                     "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/AccelStepper/src",
                     "/Users/luanabelinsky/.platformio/packages/framework-arduinoteensy/libraries/Adafruit_NeoPixel",
