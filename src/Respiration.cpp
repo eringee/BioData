@@ -109,7 +109,9 @@ void Respiration::sample() {
   // Read analog value if needed.
   // respSensorReading = ADS.getValue(); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
   respSensorReading = ADS.getValue();
+
   temperature = thermistor.readTemp(respSensorReading);
+
   
   respSensorFiltered = respMinMax.filter(respSensorReading);
   respSensorAmplitude = respMinMax.getMax() - respMinMax.getMin();
