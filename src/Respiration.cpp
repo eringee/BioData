@@ -55,6 +55,8 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   scalerRpmChange(),
   scalerRpmVariability(),
   flowRateMetro(flowRateMetroTimer),
+  _temperature(25),
+  _adcValue(13000),
   _state(0),
   _amplitude(0.3),
   _amplitudeChange(0),
@@ -66,10 +68,7 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _rpmDelta(0),
   _rpmCV(0),
   _flowRateSurges(0),
-  _flowRateVariability(0),
-  _temperature(25),
-  _adcValue(13000)
-
+  _flowRateVariability(0)
 {
   setSampleRate(rate);
   reset();
@@ -105,7 +104,7 @@ void Respiration::setSampleRate(unsigned long rate) {
   microsBetweenSamples = 1000000UL / sampleRate;  //
 }
 
-void Respiration::update(float value) {
+void Respiration::update() {
   unsigned long t = micros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
@@ -132,14 +131,14 @@ void Respiration::sample() {
   flowRate(_temperature);
 }
 
-void Signal::state(float value){ // base temperature signal processing and peak detection
+void Respiration::state(float value){ // base temperature signal processing and peak detection
   value >> smoother >> normalizer >> scaler; //smooth, normalize and scale base temperature signal
   scaler >> peak; // detect max peak (exhale)
   scaler >> trough; // detect min peak (inhale)
   _state = peak ? 1 : trough ? 0 : _state; // store state (0 = inhale / 1 = exhale)
 }
 
-void Signal::amplitude(float value){ // amplitude data processing
+void Respiration::amplitude(float value){ // amplitude data processing
   // declare and initialize local variables
   static float min = 0; // base signal value at lowest point in breath cycle
   static float max = 0; // base signal value at highest point in breath cycle
@@ -168,7 +167,7 @@ void Signal::amplitude(float value){ // amplitude data processing
 }
 
 
-void Signal::rpm(){ // respiration rate data processing (respirations per minute)
+void Respiration::rpm(){ // respiration rate data processing (respirations per minute)
   static uint16_t interval = 0; // respiration interval (ms)
     static uint16_t intervalChrono = millis(); // respiration interval chronometer (ms) 
     static float pRpm = 0; // previous rpm to determine rpm difference
@@ -197,7 +196,7 @@ void Signal::rpm(){ // respiration rate data processing (respirations per minute
     }
 }
 
-void Signal::flowRate(float value){ // flow rate data processing
+void Respiration::flowRate(float value){ // flow rate data processing
   static float pValue = 30; // previous temperature signal value
     static float flowRate = 0.01; // flow rate (temperature difference in a given period of time)
   float surgeOutlierThreshold = 3;  // threshold for an outlier surge (big surge)
@@ -225,17 +224,17 @@ void Signal::flowRate(float value){ // flow rate data processing
 }
 
 //returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getNormalized(){  
+float Respiration::getNormalized() const{  
   return normalizer;
 } 
 
 //returns scaled temperature signal (float between 0 and 1 : 0 is min value, 1 is max value)
-float Respiration::getScaled(){ 
+float Respiration::getScaled() const{ 
   return scaler;
 } 
 
 //returns breath state (two states : 0 is inhale, 1 is exhale)
-uint8_t Repiration::getState() const{ 
+uint8_t Respiration::getState() const{ 
   return _state;
 }
 
@@ -245,7 +244,7 @@ float Respiration::getAmplitude() const{
 }
 
  //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getAmplitudeNormalized(){ 
+float Respiration::getAmplitudeNormalized() const{ 
   return normalizerAmplitude;
 }
 
@@ -280,7 +279,7 @@ float Respiration::getRpmNormalized(){
 }
 
 //returns repiration rate change indicator (0 : slower than baseline, 0.5 : no significant change from baseline, 1 : faster than baseline)
-float Repiration::getRpmChange() const{ 
+float Respiration::getRpmChange() const{ 
   return _rpmChange;
 }
 

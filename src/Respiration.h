@@ -210,11 +210,11 @@ public:
    * calling any of the access functions. This function takes into account
    * the sample rate.
    */
-  void update(float value);
+  void update();
 
   // Performs the actual adjustments of signals and filterings.
   // Internal use: don't use directly, use update() instead.
-  void sample(float value);
+  void sample();
 
   void state(float value); // base temperature signal processing and peak detection
   void amplitude(float value); // amplitude data processing
@@ -222,7 +222,7 @@ public:
   void flowRate(float value); // flow rate data processing
 
   /// Returns raw ADC signal.
-  int getRaw() const;
+  uint16_t getRaw() const;
 
   /// Returns temperature signal, converted with Steinhart-Hart equation.
   float getTemperature() const;
@@ -230,11 +230,11 @@ public:
   /// Get normalized respiration signal.
   float getNormalized() const;
 
-  float getScaled(); //returns scaled base signal
+  float getScaled() const; //returns scaled base signal
   uint8_t getState() const; //returns breath state (inhale peak/exhale peak)
   float getAmplitude() const; //returns breah amplitude (raw)
-  float getAmplitudeNormalized(); //returns normalized breath amplitude 
-  float getAmplitudeScaled(); //returns scaled breath amplitude 
+  float getAmplitudeNormalized() const; //returns normalized breath amplitude 
+  float getAmplitudeScaled() const; //returns scaled breath amplitude 
 
   ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
   /* For example, if amplitude is average, returns 0.5,
