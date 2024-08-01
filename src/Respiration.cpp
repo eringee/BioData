@@ -224,12 +224,12 @@ void Respiration::flowRate(float value){ // flow rate data processing
 }
 
 //returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getNormalized() const{  
+float Respiration::getNormalized() {  
   return normalizer;
 } 
 
 //returns scaled temperature signal (float between 0 and 1 : 0 is min value, 1 is max value)
-float Respiration::getScaled() const{ 
+float Respiration::getScaled(){ 
   return scaler;
 } 
 
@@ -244,7 +244,7 @@ float Respiration::getAmplitude() const{
 }
 
  //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getAmplitudeNormalized() const{ 
+float Respiration::getAmplitudeNormalized(){ 
   return normalizerAmplitude;
 }
 

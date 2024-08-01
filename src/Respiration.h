@@ -228,13 +228,12 @@ public:
   float getTemperature() const;
 
   /// Get normalized respiration signal.
-  float getNormalized() const;
+  float getNormalized();
 
-  float getScaled() const; //returns scaled base signal
+  float getScaled(); //returns scaled base signal
   uint8_t getState() const; //returns breath state (inhale peak/exhale peak)
   float getAmplitude() const; //returns breah amplitude (raw)
-  float getAmplitudeNormalized() const; //returns normalized breath amplitude 
-  float getAmplitudeScaled() const; //returns scaled breath amplitude 
+  float getAmplitudeNormalized(); //returns normalized breath amplitude 
 
   ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
   /* For example, if amplitude is average, returns 0.5,
@@ -249,7 +248,6 @@ public:
   float getInterval() const; //returns interbreath interval
   float getRpm() const; //returns respiration rate (respirations per minute)
   float getRpmNormalized(); //returns normalized respiration rate
-  float getRpmScaled(); //returns scaled respiration rate
 
     /// Returns the average bpm of signal mapped between 0.0 and 1.0.
   /* For example, if bpm is average, returns 0.5,
