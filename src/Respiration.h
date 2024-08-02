@@ -153,7 +153,7 @@ public:
       
         // Smoothers
         Smoother smoother;
-      Smoother smootherAmplitude;
+        Smoother smootherAmplitude;
         Smoother smootherAmplitudeChange;
         Smoother smootherRpm;
         Smoother smootherRpmChange;
@@ -224,7 +224,7 @@ public:
   /// Returns raw ADC signal.
   uint16_t getRaw() const;
 
-  /// Returns temperature signal, converted with Steinhart-Hart equation.
+  /// Returns temperature signal in Celcius, converted with Steinhart-Hart equation.
   float getTemperature() const;
 
   /// Get normalized respiration signal.
