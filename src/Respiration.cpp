@@ -126,7 +126,6 @@ void Respiration::sample() {
   peakOrTrough(_temperature);
   amplitude(_temperature);
   rpm();
-  flowRate(_temperature);
 }
 
 void Respiration::peakOrTrough(float value){ // base temperature signal processing and peak detection

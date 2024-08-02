@@ -215,7 +215,6 @@ public:
   void peakOrTrough(float value); // base temperature signal processing and peak detection
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
-  void flowRate(float value); // flow rate data processing
 
   /// Returns raw ADC signal.
   uint16_t getRaw() const;
