@@ -61,11 +61,11 @@ public:
    //-----COMMON PARAMETERS-----//
         // Normalizers have a target mean of 0 and standard deviation of 1
         float normalizerMean = 0; 
-      float normalizerStdDev = 1;
+        float normalizerStdDev = 1;
 
     //-----TEMPERATURE SIGNAL-----//
         // Base temperature signal normalizer time window
-      float normalizerTimeWindow = 10;
+        float normalizerTimeWindow = 10;
 
         // Base temperature signal smoothing factor
         float smootherFactor = 0.1;
@@ -73,8 +73,8 @@ public:
         // Base temperature signal scaling time window
         float scalerTimeWindow = 10;
 
-    //-----STATE-----//
-    // Inhale peak ---> 0
+    //-----EXHALE/INHALE-----//
+    // Inhale trough ---> 0
     // Exhale peak ---> 1
         // Thresholds for peak detection
         float peakThreshold = 0.5;
@@ -86,7 +86,7 @@ public:
 
     //-----AMPLITUDE-----//
         // Amplitude normalizer time window
-      float normalizerAmplitudeTimeWindow = 120;
+        float normalizerAmplitudeTimeWindow = 120;
 
         // Amplitude change normalizer time window
         float normalizerAmplitudeChangeTimeWindow = 60;
@@ -175,8 +175,8 @@ public:
         float _temperature;
         uint16_t _adcValue;
 
-        // State (inhale peak/exhale peak)
-        uint8_t _state;
+        // exhale (exhale = temperature peak)
+        bool _exhale;
 
         // Amplitude
         float _amplitude;
@@ -190,10 +190,6 @@ public:
         float _rpmChange;
         float _rpmDelta;
         float _rpmCV;
-
-        // Flow rate
-        float _flowRateSurges;
-        float _flowRateVariability;
 
     //-----METHODS-----//
   Respiration(uint8_t pin, unsigned long rate=50);   // Constructor. Default respiration samplerate is 50Hz
@@ -216,7 +212,7 @@ public:
   // Internal use: don't use directly, use update() instead.
   void sample();
 
-  void state(float value); // base temperature signal processing and peak detection
+  void peakOrTrough(float value); // base temperature signal processing and peak detection
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
   void flowRate(float value); // flow rate data processing
@@ -231,9 +227,9 @@ public:
   float getNormalized();
 
   float getScaled(); //returns scaled base signal
-  uint8_t getState() const; //returns breath state (inhale peak/exhale peak)
-  float getAmplitude() const; //returns breah amplitude (raw)
-  float getAmplitudeNormalized(); //returns normalized breath amplitude 
+  bool isExhaling() const; //returns true if user is exhaling (temperature going up)
+  float getTemperatureAmplitude() const; //returns breah amplitude (temperature at peak - temperature at trough)
+  float getNormalizedAmplitude(); //returns normalized breath amplitude 
 
   ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
   /* For example, if amplitude is average, returns 0.5,
@@ -242,12 +238,12 @@ public:
   */
   float getAmplitudeChange() const; //returns breath amplitude change indicator
 
-  float getAmplitudeDelta() const; //returns breath amplitude delta
+  float getTemperatureAmplitudeDelta() const; //returns breath amplitude delta
   float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
 
   float getInterval() const; //returns interbreath interval
   float getRpm() const; //returns respiration rate (respirations per minute)
-  float getRpmNormalized(); //returns normalized respiration rate
+  float getNormalizedRpm(); //returns normalized respiration rate
 
     /// Returns the average bpm of signal mapped between 0.0 and 1.0.
   /* For example, if bpm is average, returns 0.5,
@@ -256,10 +252,7 @@ public:
   */
   float getRpmChange() const; //returns repiration rate change indicator
   float getRpmDelta() const; //returns respiration rate delta
-  float getRpmVariability() const; //returns respiration rate coefficient of variation
-
-  float getFlowRateSurges() const; //returns flow rate
-  float getFlowRateVariability() const; //returns flow rate variability 
+  float getRpmVariability() const; //returns respiration rate coefficient of variation 
 };
 
 #endif
