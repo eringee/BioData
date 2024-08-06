@@ -19,80 +19,107 @@ the Free Software Foundation.
 #include <Respiration.h>
 
 // Create instance for sensor on analog input pin.
-Respiration resp(A0);
-
-// Optional variables for lighting onboard LED on heartbeat
-int counter;  // counter for timing routine without using delay
-int LED = 13; // onboard LED
-unsigned long litMillis = 0;        // will store how long LED was lit up
-const long ledInterval = 50;        // interval at which to blink LED (milliseconds)
+ Respiration resp(2);
 
 //variable for attenuating data flow to serial port prevents crashes
 const long printInterval = 20;       // millis
 
-boolean doOnce = true;    // for only performing actions once when breath is detected
-
 void setup() {
   Serial.begin(9600);  // works best in testing with 9600 or lower
   
-  //optional LED for displaying breath
-  pinMode(LED, OUTPUT);
-  litMillis = ledInterval;  // make sure the LED doesn't light up automatically
-  
   // Initialize sensor.
-  resp.reset();
+   resp.reset();
 
-  // uncomment below to redefine samplerate, default is 200Hz  
-  //resp.setSampleRate(200); 
 }
 
 void loop() {
   // Update sensor. 
-  resp.update();
+   resp.update();
   
   unsigned long currentMillis = millis();    // update time
 
   if (currentMillis%printInterval == 0) {  //to avoid crashing serial port
   // Print-out different information.  
-  
-    //Serial.print(resp.getRaw());  
-    //Serial.print("\t");                  // tab separated values
-    Serial.print(resp.getNormalized()); // ADC values are normalized and mapped as float from 0.0 to 1.0
-                                       // Note that if signal amplitude changes drastically the breath detection may
-                                       // pause while the normalization process recalibrates
-                                       
-    Serial.print("\t");                  // tab separated values
-  
-    Serial.print(resp.getBPM());  
-    Serial.print("\t");
-  
-    Serial.print(resp.bpmChange());     // maps changes in bpm and outputs as float from 0.0 to 1.0 
-                                      // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
-    Serial.print("\t");
-    Serial.println(resp.amplitudeChange()); // maps changes in signal amplitude and outputs as float from 0.0 to 1.0 
-                                        // 0.5 is avg, < 0.5 as below average, > 0.5 above average.
+
+      // =======BASE SIGNAL======= //
+      // Raw
+        Serial.print("MA100_R: ");
+        Serial.print(resp.getRaw());
+        Serial.print(" ");
+      // Temperature
+        Serial.print("MA100_T: ");
+        Serial.print(resp.getTemperature());
+        Serial.print(" ");
+      // Normalized
+        Serial.print("MA100_N: ");
+        Serial.print(resp.getNormalized());
+        Serial.print(" ");
+      //Scaled
+        Serial.print("MA100_NS: ");
+        Serial.print(resp.getScaled());
+        Serial.print(" ");
+      //State
+        Serial.print("MA100_S: ");
+        Serial.print(resp.getState());
+        Serial.print(" ");
+
+      // =======AMPLITUDE======= //
+      //Amplitude 
+        Serial.print("MA100_A: ");
+        Serial.print(resp.getAmplitude());
+        Serial.print(" "); 
+      //Amplitude normalized
+        Serial.print("MA100_AN: ");
+        Serial.print(resp.getAmplitudeNormalized());
+        Serial.print(" "); 
+      //Amplitude change
+        Serial.print("MA100_AC: ");
+        Serial.print(resp.getAmplitudeChange());
+        Serial.print(" "); 
+      //Amplitude delta
+        Serial.print("MA100_AD: ");
+        Serial.print(resp.getAmplitudeDelta());
+        Serial.print(" "); 
+      //Amplitude regularity
+        Serial.print("MA100_AV: ");
+        Serial.print(resp.getAmplitudeVariability());
+        Serial.print(" "); 
+
+      // =======RPM======= //
+      //Interval
+        Serial.print("MA100_I: ");
+        Serial.print(resp.getInterval());
+        Serial.print(" ");
+      //RPM
+        Serial.print("MA100_R: ");
+        Serial.print(resp.getRpm());
+        Serial.print(" ");
+      //RPM normalized
+        Serial.print("MA100_RN: ");
+        Serial.print(resp.getRpmNormalized());
+        Serial.print(" ");
+      //RPM change
+        Serial.print("MA100_RC: ");
+        Serial.print(resp.getRpmChange());
+        Serial.print(" ");
+      //RPM variability
+        Serial.print("MA100_RV: ");
+        Serial.print(resp.getRpmVariability());
+        Serial.print(" ");
+
+
+      // // =======FLOW RATE======= //
+      // //Flow rate surges
+      //   Serial.print("MA100_FRS: ");
+      //   Serial.print(resp.getFlowRateSurges());
+      //   Serial.print(" "); 
+      // //Flow rate variability
+      //   Serial.print("MA100_FRV: ");
+      //   Serial.print(resp.getFlowRateVariability());
+      //   Serial.print(" "); 
+     
+      Serial.println(" ");
+  }                                            
   }   
-                                 
-  // An example of how to do something when a breath is detected.
-  // Remember that you should avoid using delays in order to preserve samplerate.
-  
-  if (resp.breathDetected()){  
-    digitalWrite(LED, HIGH);
-    if (doOnce == true){          // only perform these actions once when a breath is detected
-      litMillis = currentMillis;
-      digitalWrite(LED, HIGH);    // turn on an LED for visual feedback that breath occurred
-      doOnce = false;             
-    }
-  } 
-  else {
-    doOnce = true;                // reset
-  }
-
-  // check to see if it's time to turn off the LED
-
-  if (currentMillis - litMillis >= ledInterval) {   // if led interval has been surpassed turn it off
-    digitalWrite(LED, LOW);
-  }
-
 }
 
