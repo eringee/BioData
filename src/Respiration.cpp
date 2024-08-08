@@ -170,14 +170,14 @@ void Respiration::rpm(){ // respiration rate data processing (respirations per m
 
   //RPM + NORMALIZED RPM + SCALED RPM
   _rpm >> smootherRpm >> normalizerRpm; // smooth and normalize rpm
-  _scaledRpm = mapto01(normalizerRpm, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+  _scaledRpm = mapTo01(normalizerRpm, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
 
   //RPM VARIABILITY
   _rpm >> normalizerRpmVariability; // pipe rpm into a normalizer with 30 second time window to access standard deviation and mean stats
    _rpmCV = (normalizerRpmVariability.stdDev() / normalizerRpmVariability.mean())*100;
     
   //RPM Level
-  _rpmLevel = _rpmScaled >> smootherRpmLevel; // smooth normalized rpm
+  _rpmLevel = _scaledRpm >> smootherRpmLevel; // smooth normalized rpm
 
   //RPM Change
   if(peak){ // on every exhale peak
