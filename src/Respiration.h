@@ -189,7 +189,7 @@ public:
 
   float getTemperatureAmplitude() const; //returns breah amplitude (temperature at peak - temperature at trough)
   float getNormalizedAmplitude(); //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-  float getScaledAmplitude(float min=0, float max=1); //returns scaled breath amplitude (default 0 to 1)
+  float getScaledAmplitude(); //returns scaled breath amplitude (0 to 1)
   float getAmplitudeLevel() const; //returns breath amplitude level indicator (0 : smaller than baseline, 0.5 : no significant change from baseline, 1 : larger than baseline)
   float getAmplitudeChange() const; //returns breath amplitude delta
   float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
@@ -197,7 +197,7 @@ public:
   float getInterval() const; //returns interbreath interval
   float getRpm() const; //returns respiration rate (respirations per minute)
   float getNormalizedRpm(); //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-  float getScaledRpm(float min=0, float max=1); //returns scaled respiration rate (default 0 to 1)
+  float getScaledRpm(); //returns scaled respiration rate (0 to 1)
   float getRpmLevel() const; //returns repiration rate level indicator (0 : slower than baseline, 0.5 : no significant change from baseline, 1 : faster than baseline)
   float getRpmChange() const; //returns respiration rate delta
   float getRpmVariability() const; //returns respiration rate coefficient of variation 
