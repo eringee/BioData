@@ -139,7 +139,6 @@ public:
         // Amplitude
         float _amplitude;
         float _scaledAmplitude;
-        float _amplitudeChange;
         float _amplitudeLevel;
         float _amplitudeChange;
         float _amplitudeCV;
