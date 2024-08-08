@@ -137,7 +137,7 @@ void Respiration::amplitude(float value){ // amplitude data processing
   }
   if (trough) min = value; // base signal value at lowest point in breath cycle
   _amplitude >> smootherAmplitude >> normalizerAmplitude; // smooth and normalize amplitude
-  _amplitudeScaled = mapTo01(normalizerAmplitude, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+  _scaledAmplitude = mapTo01(normalizerAmplitude, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
  
   //AMPLITUDE VARIABILITY
     _amplitude >> normalizerAmplitudeVariability; // pipe amplitude into a normalizer with 30 second time window to access standard deviation and mean stats
@@ -170,7 +170,7 @@ void Respiration::rpm(){ // respiration rate data processing (respirations per m
 
   //RPM + NORMALIZED RPM + SCALED RPM
   _rpm >> smootherRpm >> normalizerRpm; // smooth and normalize rpm
-  _rpmScaled = mapto01(normalizerRpm, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+  _scaledRpm = mapto01(normalizerRpm, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
 
   //RPM VARIABILITY
   _rpm >> normalizerRpmVariability; // pipe rpm into a normalizer with 30 second time window to access standard deviation and mean stats
