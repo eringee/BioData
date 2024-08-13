@@ -33,32 +33,44 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
    ADS(pin),                     // 0x49 is the I2C address we chose (see ADS1115 datasheet for specifications)
   thermistor(),                  // thermistor
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
-  normalizerAmplitude(normalizerMean, normalizerStdDev, normalizerAmplitudeTimeWindow),
-  normalizerAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerAmplitudeVariabilityTimeWindow),
-  normalizerRpm(normalizerMean, normalizerStdDev, normalizerRpmTimeWindow),
-  normalizerRpmVariability(normalizerMean, normalizerStdDev, normalizerRpmVariabilityTimeWindow),
-  peak(peakThreshold, PEAK_MAX),
-  trough(troughThreshold, PEAK_MIN),
+  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
+  amplitudeVariabilityNormalizer(normalizerMean, normalizerStdDev, amplitudeVariabilityNormalizerTimeWindow),
+  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow),
+  rpmVariabilityNormalizer(normalizerMean, normalizerStdDev, rpmVariabilityNormalizerTimeWindow),
+  normalizedPeak(normalizedPeakThreshold, PEAK_MAX),
+  normalizedTrough(normalizedTroughThreshold, PEAK_MIN),  
+  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX),
+  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN),
   smoother(smootherFactor),
-  smootherAmplitude(smootherAmplitudeFactor),
-  smootherAmplitudeLevel(smootherAmplitudeLevelFactor),
-  smootherRpm(smootherRpmFactor),
-  smootherRpmLevel(smootherRpmLevelFactor),
+  amplitudeSmoother(amplitudeSmootherFactor),
+  amplitudeLevelSmoother(amplitudeLevelSmootherFactor),
+  rpmSmoother(rpmSmootherFactor),
+  rpmLevelSmoother(rpmLevelSmootherFactor),
+  minMaxScaler(),
+  amplitudeMinMaxScaler(),
+  rpmMinMaxScaler(),
   _temperature(25),
   _adcValue(13000),
-  _scaled(0.5),
-  _exhale(0),
+  _clampScaled(0.5),
+  _minMaxScaled(0.5),
+  _normalizedExhale(0),
+  _minMaxScaledExhale(0),
   _amplitude(0.3),
-  _scaledAmplitude(0.5),
+  _clampScaledAmplitude(0.5),
+  _minMaxScaledAmplitude(0.5),
   _amplitudeLevel(0.5),
-  _amplitudeChange(0.5),
+  _amplitudeRoChange(),
   _amplitudeCV(0),
   _interval(0),
   _rpm(12),
-  _scaledRpm(0.5),
+  _clampScaledRpm(0.5),
+  _minMaxScaledRpm(0.5),
   _rpmLevel(0.5),
-  _rpmChange(0.5),
-  _rpmCV(0)
+  _rpmRoChange(0.5),
+  _rpmCV(0),
+  _min(),
+  _max(),
+  _millisPassed(0)
 {
   setSampleRate(rate);
   reset();
@@ -75,10 +87,19 @@ void Respiration::reset() {
   prevSampleMicros = micros();
 
   //set peak detector thresholds
-  peak.reloadThreshold(peakReloadThreshold);
-  peak.fallbackTolerance(peakFallbackThreshold);
-  trough.reloadThreshold(troughReloadThreshold);
-  trough.fallbackTolerance(troughFallbackThreshold);
+  normalizedPeak.reloadThreshold(normalizedPeakReloadThreshold);
+  normalizedPeak.fallbackTolerance(normalizedPeakFallbackThreshold);
+  normalizedTrough.reloadThreshold(normalizedTroughReloadThreshold);
+  normalizedTrough.fallbackTolerance(normalizedTroughFallbackThreshold);
+
+  minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
+  minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
+  minMaxScaledTrough.reloadThreshold(minMaxScaledTroughReloadThreshold);
+  minMaxScaledTrough.fallbackTolerance(minMaxScaledTroughFallbackThreshold);
+
+  minMaxScaler.timeWindow(normalizerTimeWindow);
+  amplitudeMinMaxScaler.timeWindow(amplitudeNormalizerTimeWindow);
+  rpmMinMaxScaler.timeWindow(rpmNormalizerTimeWindow);
 
   // Perform one update.
   sample();
@@ -116,74 +137,116 @@ void Respiration::sample() {
 }
 
 void Respiration::peakOrTrough(float value){ // base temperature signal processing and peak detection
-  // BASE TEMPERATURE SIGNAL + NORMALIZED + SCALED + PEAK DETECTION
+  // BASE TEMPERATURE SIGNAL + NORMALIZED 
   value >> smoother >> normalizer; //smooth and normalize base temperature signal
-  normalizer >> peak; // detect max peak (exhale)
-  normalizer >> trough; // detect min trough (inhale)
-  _exhale = peak ? 1 : trough ? 0 : _exhale; // store true if exhaling (0 = inhale / 1 = exhale)
-  _scaled = mapTo01(normalizer, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+
+  // FROM NORMALIZED SIGNAL : PEAK DETECTION AND CLAMP SCALED SIGNAL
+  normalizer >> normalizedPeak; // detect max peak (exhale)
+  normalizer >> normalizedTrough; // detect min trough (inhale)
+  // store true if exhaling (0 = inhale / 1 = exhale)
+  _normalizedExhale = normalizedPeak ? 1 : normalizedTrough ? 0 : _normalizedExhale; 
+
+  _clampScaled = mapTo01(normalizer, fromMinStdDev, fromMaxStdDev,CONSTRAIN);
+
+  // MINMAX SCALED SIGNAL : PEAK DETECTION AND MIN MAX SCALED SIGNAL
+  _minMaxScaled = normalizer >> minMaxScaler;
+  minMaxScaler >> minMaxScaledPeak;
+  minMaxScaler>> minMaxScaledTrough;
+  _minMaxScaledExhale = minMaxScaledPeak ? 1 : minMaxScaledTrough ? 0 : _minMaxScaledExhale; // store true if exhaling (0 = inhale / 1 = exhale)
 }
 
 void Respiration::amplitude(float value){ // amplitude data processing
   // declare and initialize local variables
-  static float min = 0; // base signal value at lowest point in breath cycle
-  static float max = 0; // base signal value at highest point in breath cycle
-  static float pAmplitude = 0; // previous amplitude to determine ampliude difference
+  static float min ; // base signal value at lowest point in breath cycle
+  static float max ; // base signal value at highest point in breath cycle
+  static float amplitudes[numberOfCycles] = {}; // array of previous breath amplitudes
+  static int index = 0; // index 
 
-  //AMPLITUDE + NORMALIZED AMPLITUDE + SCALED AMPLITUDE
-  if (peak){  
+  //AMPLITUDE 
+  if (minMaxScaledPeak){  
     max = value; // base signal value at highest point in breath cycle
-    _amplitude = abs(max - min); // calculate absolute amplitude 
+    if(max != 0 && min != 0) {
+      _amplitude = abs(max - min);
+    }
+    _min = min;
+    _max = max;
   }
-  if (trough) min = value; // base signal value at lowest point in breath cycle
-  _amplitude >> smootherAmplitude >> normalizerAmplitude; // smooth and normalize amplitude
-  _scaledAmplitude = mapTo01(normalizerAmplitude, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+  if (minMaxScaledTrough) min = value; // base signal value at lowest point in breath cycle
+
+  // NORMALIZED AMPLITUDE
+  if(min !=0 && max != 0) {
+    _amplitude >> amplitudeSmoother >> amplitudeNormalizer; // smooth and normalize amplitude
+  }
+ 
+  // SCALED AMPLITUDE (clamped from normalized)
+  _clampScaledAmplitude = mapTo01(amplitudeNormalizer, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+
+  // SCALED AMPLITUDE (MinMaxScaler)
+  _minMaxScaledAmplitude = amplitudeNormalizer >> amplitudeMinMaxScaler;
  
   //AMPLITUDE VARIABILITY
-    _amplitude >> normalizerAmplitudeVariability; // pipe amplitude into a normalizer with 30 second time window to access standard deviation and mean stats
-    _amplitudeCV = (normalizerAmplitudeVariability.stdDev() / normalizerAmplitudeVariability.mean())*100;
+    _amplitude >> amplitudeVariabilityNormalizer; // pipe amplitude into a normalizer with 30 second time window to access standard deviation and mean stats
+    _amplitudeCV = (amplitudeVariabilityNormalizer.stdDev() / amplitudeVariabilityNormalizer.mean())*100;
     
   //AMPLITUDE Level
-   _amplitudeLevel = normalizerAmplitude >> smootherAmplitudeLevel; // smooth normalized amplitude
+   _amplitudeLevel = _minMaxScaledAmplitude >> amplitudeLevelSmoother; // smooth normalized amplitude
   
-  //AMPLITUDE Change (temperature amplitude difference between breath cycles)
-    if (peak) { // on every exhale peak
-        _amplitudeChange = _amplitude - pAmplitude; // calculate the difference with previous temperature amplitude 
-        pAmplitude = _amplitude; // store amplitude of latest breath cycle
-    } 
+  //AMPLITUDE RoChange && SMAChange
+    if (minMaxScaledPeak) { // on every exhale peak
+      float oldestBreath = amplitudes[index];
+      amplitudes[index] = amplitudeSmoother;
+      index = (index + 1) % numberOfCycles;
+
+      _amplitudeRoChange = (_amplitude - oldestBreath)/_millisPassed * 60000; // breath amplitude rate of change (Celcius/minute)
+    }
 }
+
 
 
 void Respiration::rpm(){ // respiration rate data processing (respirations per minute)
   static uint16_t interval = 0; // respiration interval (ms)
     static uint16_t intervalChrono = millis(); // respiration interval chronometer (ms) 
-    static float pRpm = 0; // previous rpm to determine rpm difference
+    static int intervalIndex = 0; // index
+    static float rpms[numberOfCycles] = {}; // array of previous breath rates
+    static int rpmIndex = 0; // index 
+
 
   //INTERVAL
-  if (peak){ // on every exhale peak
+  if (minMaxScaledPeak){ // on every exhale peak
     interval = millis() - intervalChrono; // calculate interval between current and previous exhale peak
     intervalChrono = millis(); // restart interval chronometer
     if (interval >= 30) _rpm = 60000 / interval; // calculate rpm from interval
     // minimal interval condition to bypass noise errors 
+
+    _millisPassed = std::accumulate(std::begin(intervals), std::end(intervals), 0); // sum of intervals[]
+
+      intervals[intervalIndex] = interval;
+      intervalIndex = (intervalIndex + 1) % numberOfCycles;
+
+  //RPM Change
+      int oldestRpm = rpms[rpmIndex];
+      rpms[rpmIndex] = rpmSmoother;
+      rpmIndex = (rpmIndex + 1) % numberOfCycles;
+      _rpmRoChange = (rpmSmoother - oldestRpm)/_millisPassed * 60000; // breath rate of change (Celcius/minute) - previous oldestInterval;
   }
   _interval = interval;
 
-  //RPM + NORMALIZED RPM + SCALED RPM
-  _rpm >> smootherRpm >> normalizerRpm; // smooth and normalize rpm
-  _scaledRpm = mapTo01(normalizerRpm, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+
+  //RPM + NORMALIZED RPM 
+  _rpm >> rpmSmoother >> rpmNormalizer; // smooth and normalize rpm
+
+  //SCALED RPM (clamped from normalized)
+  _clampScaledRpm = mapTo01(rpmNormalizer, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+
+  //SCALED RPM (MinMaxScaler)
+  _minMaxScaledRpm = rpmNormalizer >> rpmMinMaxScaler;
 
   //RPM VARIABILITY
-  _rpm >> normalizerRpmVariability; // pipe rpm into a normalizer with 30 second time window to access standard deviation and mean stats
-   _rpmCV = (normalizerRpmVariability.stdDev() / normalizerRpmVariability.mean())*100;
+  _rpm >> rpmVariabilityNormalizer; // pipe rpm into a normalizer with 30 second time window to access standard deviation and mean stats
+   _rpmCV = (rpmVariabilityNormalizer.stdDev() / rpmVariabilityNormalizer.mean())*100;
     
   //RPM Level
-  _rpmLevel = _scaledRpm >> smootherRpmLevel; // smooth normalized rpm
-
-  //RPM Change
-  if(peak){ // on every exhale peak
-      _rpmChange = _rpm - pRpm; // calculate the difference with previous rpm *RAW OR NORMALIZED RPM?
-      pRpm = _rpm; // store rpm of latest breath cycle
-    }
+  _rpmLevel = _minMaxScaledRpm >> rpmLevelSmoother; // smooth normalized rpm
 }
 
 //returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
@@ -191,14 +254,24 @@ float Respiration::getNormalized() {
   return normalizer;
 } 
 
-//returns scaled temperature signal (default : returns a float between 0 and 1)
-float Respiration::getScaled(float min, float max) { 
-  return _scaled;
+//returns scaled temperature signal (returns a float between 0 and 1) : scaled by mapping and clamping normalized signal
+float Respiration::getClampScaled() { 
+  return _clampScaled;
 } 
 
-//returns true if exhaling 
-bool Respiration::isExhaling() const{ 
-  return _exhale;
+//returns scaled temperature signal (default : returns a float between 0 and 1) : scaled by MinMaxScaler
+float Respiration::getMinMaxScaled() { 
+  return _minMaxScaled;
+}
+
+//returns true if exhaling (from normalized value)
+bool Respiration::normalizedIsExhaling() const{ 
+  return _normalizedExhale;
+}
+
+//returns true if exhaling (from MinMaxScaler scaled value)
+bool Respiration::minMaxScaledIsExhaling() const{ 
+  return _minMaxScaledExhale;
 }
 
 //returns breah amplitude (temperature difference between breath cycle peak and trough)
@@ -208,12 +281,17 @@ float Respiration::getTemperatureAmplitude() const{
 
  //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
 float Respiration::getNormalizedAmplitude(){ 
-  return normalizerAmplitude;
+  return amplitudeNormalizer;
 }
 
- //returns scaled breath amplitude (default : returns a float between 0 and 1)
-float Respiration::getScaledAmplitude() { 
-  return _scaledAmplitude;
+ //returns scaled breath amplitude (returns a float between 0 and 1) : scaled by mapping and clamping normalized amplitude
+float Respiration::getClampScaledAmplitude() { 
+  return _clampScaledAmplitude;
+}
+
+//returns scaled breath amplitude (default : returns a float between 0 and 1) : scaled by MinMaxScaler
+float Respiration::getMinMaxScaledAmplitude() { 
+  return _minMaxScaledAmplitude;
 }
 
 //returns breath amplitude level indicator (normalized amplitude smoothed and scaled between 0 and 1)
@@ -222,9 +300,9 @@ float Respiration::getAmplitudeLevel() const{
   return _amplitudeLevel;
 }
 
-//returns breath amplitude change indicator (difference between temperature amplitude of current and previous breath cycle)
+//returns breath amplitude rate of change (RoC)
 float Respiration::getAmplitudeChange() const{ 
-  return _amplitudeChange;
+  return _amplitudeRoChange;
 }
 
 //returns breath amplitude coefficient of variation
@@ -244,12 +322,17 @@ float Respiration::getRpm() const{
 
 //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
 float Respiration::getNormalizedRpm(){ 
-  return normalizerRpm;
+  return rpmNormalizer;
 }
 
- //returns scaled respiration rate (returns a float between 0 and 1)
-float Respiration::getScaledRpm() { 
-  return _scaledRpm;
+ //returns scaled respiration rate (returns a float between 0 and 1) : scaled by mapping and clamping normalized rpm
+float Respiration::getClampScaledRpm() { 
+  return _clampScaledRpm;
+}
+
+//returns scaled respiration rate (default : returns a float between 0 and 1) : scaled by MinMaxScaler
+float Respiration::getMinMaxScaledRpm() { 
+  return _minMaxScaledRpm;
 }
 
 //returns repiration rate level indicator (0 : slower than baseline, 0.5 : no significant change from baseline, 1 : faster than baseline)
@@ -259,10 +342,18 @@ float Respiration::getRpmLevel() const{
 
 //returns respiration rate change indicator (difference between calculated respiration rate of current and previous breath cycle)
 float Respiration::getRpmChange() const{ 
-  return _rpmChange;
+  return _rpmRoChange;
 }
 
 //returns respiration rate coefficient of variation
 float Respiration::getRpmVariability() const{ 
   return _rpmCV;
+}
+
+float Respiration::getMin() { 
+  return _min;
+}
+
+float Respiration::getMax(){ 
+  return _max;
 }
