@@ -36,12 +36,11 @@
 // John M. Zurbuchen. Precision thermistor thermometry. Measurement Science Conference Tutorial: Thermometry-Fundamentals and Practice, 2000.
 // http://www.nktherm.com/tec/linearize.html  Steinhart and Hart 式によるサーミスタ抵抗値の温度変換
 
-SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3, float divR, int16_t adcPin, NTC_CONNECT_t ntcConnect, float offsetT) :
+SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3, float divR, NTC_CONNECT_t ntcConnect, float offsetT, int resolution) :
   _DIV_R(divR),
-  _ADC_CHANNEL(adcPin),
   _OFFSET_TEMP(offsetT),
   _NTC_CONNECT(ntcConnect),
-  _EXCITE_VALUE(DEFAULT_EXCITE_VALUE),
+  _EXCITE_VALUE(resolution),
   _V_IN(DEFAULT_VOLTAGE_IN),
   _ADC_GAIN(DEFAULT_ADC_GAIN),
   adcValue(0),
@@ -51,28 +50,13 @@ SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, f
   setSHcoef(SH_T1, SH_T2, SH_T3, SH_R1, SH_R2, SH_R3);
 }
 
-//Constructor with one argument, using default values. 
-//Used when transforming ADC values from analogRead() to Celcius. 
-SHthermistor::SHthermistor(int16_t adcPin) :
-  _DIV_R(DEFAULT_DIV_R),
-  _ADC_CHANNEL(adcPin),
-  _OFFSET_TEMP(0),
-  _NTC_CONNECT(DEFAULT_NTC_CONNECT),
-  _EXCITE_VALUE(DEFAULT_EXCITE_VALUE),
-  adcValue(0),
-  resistance(0),
-  temperature(0)
-{
-  setSHcoef(DEFAULT_SH_T1, DEFAULT_SH_T2, DEFAULT_SH_T3, DEFAULT_SH_R1, DEFAULT_SH_R2, DEFAULT_SH_R3);
-}
-
 //Constructor with no arguments, using default values. 
 //Used when transforming ADC values from external ADC to Celcius. 
-SHthermistor::SHthermistor() :
+SHthermistor::SHthermistor(int resolution) :
   _DIV_R(DEFAULT_DIV_R),
   _OFFSET_TEMP(0),
   _NTC_CONNECT(DEFAULT_NTC_CONNECT),
-  _EXCITE_VALUE(DEFAULT_EXCITE_VALUE),
+  _EXCITE_VALUE(resolution),
   _V_IN(DEFAULT_VOLTAGE_IN),
   _ADC_GAIN(DEFAULT_ADC_GAIN),
   adcValue(0),
@@ -81,6 +65,7 @@ SHthermistor::SHthermistor() :
 {
   setSHcoef(DEFAULT_SH_T1, DEFAULT_SH_T2, DEFAULT_SH_T3, DEFAULT_SH_R1, DEFAULT_SH_R2, DEFAULT_SH_R3);
 }
+
 
 void SHthermistor::setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3) {
   SH_T1 += 273.15;
@@ -101,7 +86,7 @@ void SHthermistor::setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1,
 }
 
 //Reads resistance with external ADC value input
-void SHthermistor::readResistance(int16_t ADC) {
+void SHthermistor::readResistance(int ADC) {
     adcValue = float(ADC);
 
     float voltageOut = (adcValue / float(_EXCITE_VALUE)) * _ADC_GAIN;
@@ -113,16 +98,6 @@ void SHthermistor::readResistance(int16_t ADC) {
    }  
  }
 
-//Reads resistance with analogRead() value input
-void SHthermistor::readResistance() {
-  adcValue = analogRead(_ADC_CHANNEL);
-
-  if (_NTC_CONNECT == NTC_GND) {
-       resistance = _DIV_R * (float)adcValue /(float)(_EXCITE_VALUE - adcValue);
-  } else {
-      resistance = _DIV_R * (((float)_EXCITE_VALUE/(float)adcValue) - 1);
-  }
-  }
 
 float SHthermistor::getResistance(){
   return resistance;
@@ -132,21 +107,14 @@ float SHthermistor::getTemperature(){
   return temperature;
 }
 
-float SHthermistor::r2temp(float r) { // culculate temperature from thermistor resistance using Steinhart-Hart equation
+float SHthermistor::r2temp(float resistance) { // calculate temperature from thermistor resistance using Steinhart-Hart equation
   if (resistance == 0) return TH_ERR_DATA;
   return (1 / (SH_A + SH_B * log(resistance) + SH_C * pow(log(resistance), 3)) - 273.15 + _OFFSET_TEMP); // return temperature in Celcius
 }
 
 //Reads temperature with external ADC value input
-float SHthermistor::readTemp(int16_t ADC) {
+float SHthermistor::readTemp(int ADC) {
   readResistance(ADC);
-  temperature = r2temp(getResistance());
-  return temperature;
-}
-
-//Reads temperature with analogRead() value input
-float SHthermistor::readTemp() {
-  readResistance();
   temperature = r2temp(getResistance());
   return temperature;
 }

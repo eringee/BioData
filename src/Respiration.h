@@ -28,7 +28,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
-#include "ExternalADC.h"
 #include "TemperatureSH.h"
 #include <Wire.h>  
 #include <numeric>
@@ -40,12 +39,16 @@ using namespace pq;
 #ifndef RESP_H_
 #define RESP_H_
 
+typedef enum {
+  _10_BITS = 1024,
+  _12_BITS = 4096,
+  _14_BITS = 16384,
+  _16_BITS = 65536
+} ADC_RESOLUTION;
+
 class Respiration {
   // Analog pin the Respiration sensor is connected to.
   uint8_t _pin;
-
-  //ADS1115 object if using external ADC
-  ADS1115 ADS;
 
   //SHthermistor object to calculate temperature from ADC value
   SHthermistor thermistor;
@@ -53,9 +56,8 @@ class Respiration {
   // Sample rate in Hz.
   unsigned long sampleRate;
 
-  // Internal use.
-  unsigned long microsBetweenSamples;
-  unsigned long prevSampleMicros;
+  // Metro object for sample timing
+  Metro sampleMetro;
 
 public:
 
@@ -73,20 +75,12 @@ public:
         float normalizerTimeWindow = 5;
 
         // Base temperature signal smoothing factor
-        float smootherFactor = 0.3;
+        float smootherFactor = 0.5;
 
     //-----EXHALE/INHALE-----//
     // Inhale trough ---> 0
     // Exhale peak ---> 1
-        // Thresholds for peak detection (from normalized value)
-        float normalizedPeakThreshold = 0;
-        float normalizedTroughThreshold = 0;
-        float normalizedPeakReloadThreshold = -0.1;
-        float normalizedPeakFallbackThreshold = 0.1;
-        float normalizedTroughReloadThreshold = 0.1;
-        float normalizedTroughFallbackThreshold = 0.1;
-
-        // Thresholds for peak detection (from MinMaxScaler scaled value)
+        // Thresholds for peak detection 
         float minMaxScaledPeakThreshold = 0.5;
         float minMaxScaledTroughThreshold = 0.5;
         float minMaxScaledPeakReloadThreshold = 0.45;
@@ -98,36 +92,35 @@ public:
         // Amplitude normalizer time window
         float amplitudeNormalizerTimeWindow = 90;
 
-        // Amplitude variability normalizer time window
-        float amplitudeVariabilityNormalizerTimeWindow = 30;
+        // Normalizer for amplitude variability
+        float normalizerForAmplitudeVariabilityTimeWindow = 30;
 
         // Amplitude smoothing factors
         float amplitudeSmootherFactor = 2;
-        float amplitudeLevelSmootherFactor = 20;
+        float amplitudeLevelSmootherFactor = 5;
+        float amplitudeRateOfChangeSmootherFactor = 2;
 
     //-----RPM-----//
     // Respirations per minute
         // Rpm normalizer time window
         float rpmNormalizerTimeWindow = 90;
 
-        // Rpm variability normalizer time window
-        float rpmVariabilityNormalizerTimeWindow = 30;
+        // Normalizer for rpm variability
+        float normalizerForRpmVariabilityTimeWindow = 30;
 
         // Rpm smoothing factors
         float rpmSmootherFactor = 2;
-        float rpmLevelSmootherFactor = 20;
+        float rpmLevelSmootherFactor = 10;
+        float rpmRateOfChangeSmootherFactor = 2;
 
     //-----PLAQUETTE OBJECTS-----//
         // Normalizers
         Normalizer normalizer;
         Normalizer amplitudeNormalizer;
-        Normalizer amplitudeVariabilityNormalizer;
+        Normalizer normalizerForAmplitudeVariability;
         Normalizer rpmNormalizer;
-        Normalizer rpmVariabilityNormalizer;
+        Normalizer normalizerForRpmVariability;
 
-        // Peak detectors
-        PeakDetector normalizedPeak;
-        PeakDetector normalizedTrough;
         // Peak detectors
         PeakDetector minMaxScaledPeak;
         PeakDetector minMaxScaledTrough;
@@ -136,51 +129,45 @@ public:
         Smoother smoother;
         Smoother amplitudeSmoother;
         Smoother amplitudeLevelSmoother;
+        Smoother amplitudeRateOfChangeSmoother;
         Smoother rpmSmoother;
         Smoother rpmLevelSmoother;
+        Smoother rpmRateOfChangeSmoother;
 
         // MinMax Scaler
         MinMaxScaler minMaxScaler;
-        MinMaxScaler amplitudeMinMaxScaler;
-        MinMaxScaler rpmMinMaxScaler;
     
     //-----VARIABLES-----//
         // Temperature
         float _temperature;
-        uint16_t _adcValue;
-        float _clampScaled;
+        int _adcValue;
         float _minMaxScaled;
 
         // exhale (exhale = temperature peak)
-        bool _normalizedExhale;
-        bool _minMaxScaledExhale;
+        bool _exhale;
 
         // Amplitude
         float _amplitude;
         float _clampScaledAmplitude;
-        float _minMaxScaledAmplitude;
         float _amplitudeLevel;
-        float _amplitudeRoChange;
-        float _amplitudeCV;
+        float _amplitudeRateOfChange;
+        float _amplitudeCoefficientOfVariation;
 
         // Rpm 
-        uint8_t _interval;
+        unsigned long _interval;
         float _rpm;
         float _clampScaledRpm;
-        float _minMaxScaledRpm;
         float _rpmLevel;
-        float _rpmRoChange;
-        float _rpmCV;
-
-        float _min;
-        float _max;
+        float _rpmRateOfChange;
+        float _rpmCoefficientOfVariation;
 
         static const int numberOfCycles = 5;
         int intervals[numberOfCycles] = {};
         int _millisPassed = 0;
 
     //-----METHODS-----//
-  Respiration(uint8_t pin, unsigned long rate=50);   // Constructor. Default respiration samplerate is 50Hz
+  Respiration(uint8_t pin, unsigned long rate=50, ADC_RESOLUTION resolution = _10_BITS);   // Constructor with pin + internal ADC. Default respiration samplerate is 50Hz
+  Respiration(uint16_t (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   // Constructor with external ADC. Default respiration samplerate is 50Hz
   virtual ~Respiration() {}
 
   /// sets certain Plaquette object parameters
@@ -212,30 +199,26 @@ public:
 
   /// Get normalized respiration signal.
   float getNormalized();
-  float getClampScaled(); //returns scaled base signal
-  float getMinMaxScaled(); //returns scaled base signal
-  bool normalizedIsExhaling() const; //returns true if user is exhaling (from normalized value)
-  bool minMaxScaledIsExhaling() const; //returns true if user is exhaling (from MinMaxScaler scaled value)
+  float getScaled(); //returns minMax scaled base signal
+  bool isExhaling() const; //returns true if user is exhaling 
 
   float getTemperatureAmplitude() const; //returns breah amplitude (temperature at peak - temperature at trough)
   float getNormalizedAmplitude(); //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-  float getClampScaledAmplitude(); //returns scaled breath amplitude (0 to 1)
-  float getMinMaxScaledAmplitude(); //returns scaled breath amplitude (0 to 1)
+  float getScaledAmplitude(); //returns scaled breath amplitude (0 to 1)
   float getAmplitudeLevel() const; //returns breath amplitude level indicator (0 : smaller than baseline, 0.5 : no significant change from baseline, 1 : larger than baseline)
   float getAmplitudeChange() const; //returns breath amplitude rate of change
   float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
 
-  float getInterval() const; //returns interbreath interval
+  unsigned long getInterval() const; //returns interbreath interval
   float getRpm() const; //returns respiration rate (respirations per minute)
   float getNormalizedRpm(); //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-  float getClampScaledRpm(); //returns scaled respiration rate (0 to 1)
-  float getMinMaxScaledRpm(); //returns scaled respiration rate (0 to 1)
+  float getScaledRpm(); //returns scaled respiration rate (0 to 1)
   float getRpmLevel() const; //returns repiration rate level indicator (0 : slower than baseline, 0.5 : no significant change from baseline, 1 : faster than baseline)
   float getRpmChange() const; //returns respiration rate rate of change
   float getRpmVariability() const; //returns respiration rate coefficient of variation 
 
-  float getMin();
-  float getMax();
+private: 
+ uint16_t (*_getExternalADCValue)(void);
 };
 
 #endif

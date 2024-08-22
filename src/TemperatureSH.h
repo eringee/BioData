@@ -32,14 +32,6 @@
 #define TEMPERATURESH_h
 #include <Arduino.h> 
 
-//ADC Resolution
-#define ADC_10BIT_VALUE  1023 // 0x00400
-#define ADC_12BIT_VALUE  4095 // 0x01000
-#define ADC_14BIT_VALUE 16383 // 0x04000
-#define ADC_16BIT_VALUE 65535 // 0x10000
-//ADS1115 Resolution used as default value
-#define DEFAULT_EXCITE_VALUE ADC_16BIT_VALUE
-
 //Default voltage input
 #define DEFAULT_VOLTAGE_IN 3.3 // 3.3V default voltage input
 
@@ -79,24 +71,22 @@ public:
   SHthermistor(float SH_T1, float SH_T2, float SH_T3, // low, mid, and high temperature (Celcius) including actual measure condition
                float SH_R1, float SH_R2, float SH_R3, // thermistor resistance (ohm) at SH_T1, SH_T2, SH_T3
                float divR,                  // resistance value (ohm) of series divider resistor
-               int16_t adcPin,              // analog pin connected to thermistor and series resistor
                NTC_CONNECT_t ntcConnect,    // connection of thermistor and series resistor
-               float offsetT               // offset value added to calculated temperature
+               float offsetT,               // offset value added to calculated temperature
+               int resolution = 1024
   );
 
-  SHthermistor(int16_t adcPin);
-  SHthermistor();
+  SHthermistor(int resolution);
 
   void setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3);
   
-  void readResistance(int16_t ADC);
+  void readResistance(int ADC);
   void readResistance();
 
   float getResistance();
   float getTemperature();
   float r2temp(float r);
-  float readTemp(int16_t ADC);
-  float readTemp();
+  float readTemp(int ADC);
   void setDivR(float divR);
 
   void setOffsetTemp(float offsetT);
@@ -110,7 +100,6 @@ protected:
   float SH_B;
   float SH_C;
   float _DIV_R;
-  int16_t _ADC_CHANNEL;
   float _OFFSET_TEMP;
   NTC_CONNECT_t _NTC_CONNECT;
   int32_t _EXCITE_VALUE;
