@@ -70,7 +70,7 @@ Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolut
   reset();
 }
 
-Respiration::Respiration(uint16_t (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
+Respiration::Respiration(unsigned long (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
   _pin(0),
   thermistor(resolution),                  // thermistor
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
@@ -138,7 +138,7 @@ void Respiration::update() {
   }
 }
 
-uint16_t Respiration::getRaw()  const {
+unsigned long Respiration::getRaw()  const {
 return _adcValue ;
 }
 

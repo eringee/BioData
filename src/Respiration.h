@@ -167,7 +167,7 @@ public:
 
     //-----METHODS-----//
   Respiration(uint8_t pin, unsigned long rate=50, ADC_RESOLUTION resolution = _10_BITS);   // Constructor with pin + internal ADC. Default respiration samplerate is 50Hz
-  Respiration(uint16_t (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   // Constructor with external ADC. Default respiration samplerate is 50Hz
+  Respiration(unsigned long (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   // Constructor with external ADC. Default respiration samplerate is 50Hz
   virtual ~Respiration() {}
 
   /// sets certain Plaquette object parameters
@@ -192,7 +192,7 @@ public:
   void rpm(); // respiration rate data processing
 
   /// Returns raw ADC signal.
-  uint16_t getRaw() const;
+  unsigned long getRaw() const;
 
   /// Returns temperature signal in Celcius, converted with Steinhart-Hart equation.
   float getTemperature() const;
@@ -218,7 +218,7 @@ public:
   float getRpmVariability() const; //returns respiration rate coefficient of variation 
 
 private: 
- uint16_t (*_getExternalADCValue)(void);
+ unsigned long (*_getExternalADCValue)(void);
 };
 
 #endif
