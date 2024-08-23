@@ -97,12 +97,12 @@ void Respiration::reset() {
   sample();
 }
 
-void Respiration::setSampleRate(unsigned long rate) {
+void Respiration_::setSampleRate(unsigned long rate) {
   sampleRate = rate;
   microsBetweenSamples = 1000000UL / sampleRate;  //
 }
 
-void Respiration::update() {
+void Respiration_::update() {
   unsigned long t = micros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
@@ -110,6 +110,7 @@ void Respiration::update() {
     prevSampleMicros = t;
   }
 }
+
 
 uint16_t Respiration::getRaw()  const {
 return _adcValue ;
