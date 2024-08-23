@@ -61,8 +61,6 @@ Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolut
   _rpmLevel(0.5),
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
-  _min(-FLT_MIN),
-  _max(-FLT_MIN),
   _millisPassed(0),
   _getExternalADCValue(nullptr)
 {
@@ -103,8 +101,6 @@ Respiration::Respiration(unsigned long (*getExternalADCValue)(), unsigned long r
   _rpmLevel(0.5),
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
-  _min(-FLT_MIN),
-  _max(-FLT_MIN),
   _millisPassed(0),
   _getExternalADCValue(getExternalADCValue)
 {
