@@ -18,6 +18,9 @@ the Free Software Foundation.
 /*
 The sensor used here is a thermistor (temperature sensor), placed at airway entrance 
 to obtain a breath temperature signal that is analysed to extract features.
+
+Arduino board's internal ADCs are usually limited to 10 bit values.
+To get higher resolution in the breath signal, users might want to use an external ADC.
 */ 
 
 #include "Respiration.h"
@@ -25,13 +28,20 @@ to obtain a breath temperature signal that is analysed to extract features.
 using namespace pq; // use Plaquette namespace to access Metro class
 
 int LEDPin = 13; // LED pin
-int thermistorPin = A0; // thermistor pin
+int thermistorPin = A0; // thermistor pin on the external ADC
 
 Metro printerMetro (0.1); // print every 0.1 seconds
 
-// Create instance for sensor on analog input pin. 
-// Default sampling rate = 50Hz. Default ADC resolution = 10 bit (Arduino's internal ADC is 10 bits).
- Respiration resp(sensorPin);
+// Create instance for sensor 
+ Respiration resp(unsigned long *getADCValue, 50, _16_BITS); 
+ // Argument 1 : function to get external ADC value (will be defined below)
+ // Argument 2 : sampling rate (here, 50 Hz)
+ // Argument 3 : external ADC's resolution (format : _##_BITS)
+ // In this example, we are using the ADS1115 and the ADS1X15 library by Rob Tillaart
+
+unsigned long getADCValue(){
+
+}
 
 void setup() {
  // Initialize serial port
@@ -42,6 +52,8 @@ void setup() {
 }
 
 void loop() {
+  //
+
   // Update sensor. 
    resp.update();
   

@@ -68,6 +68,7 @@ typedef enum {
 
 class SHthermistor { 
 public:
+//Constructor with reference temperatures, resistances, divider resistor value, type of connection, offset temperature and ADC resolution
   SHthermistor(float SH_T1, float SH_T2, float SH_T3, // low, mid, and high temperature (Celcius) including actual measure condition
                float SH_R1, float SH_R2, float SH_R3, // thermistor resistance (ohm) at SH_T1, SH_T2, SH_T3
                float divR,                  // resistance value (ohm) of series divider resistor
@@ -75,39 +76,41 @@ public:
                float offsetT,               // offset value added to calculated temperature
                int resolution = 1024
   );
+  
+//Constructor that takes the resolution of the ADC as an argument
+  SHthermistor(int resolution); 
 
-  SHthermistor(int resolution);
-
+//Sets the Steinhart-Hart coefficients
   void setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3);
   
+//Reads resistance with ADC value input
   void readResistance(int ADC);
-  void readResistance();
 
-  float getResistance();
-  float getTemperature();
-  float r2temp(float r);
-  float readTemp(int ADC);
-  void setDivR(float divR);
+  float getResistance(); //Returns resistance
+  float getTemperature(); //Returns temperature
+  float r2temp(float r); //Converts resistance to temperature
+  float readTemp(int ADC); //Reads temperature with ADC value input
+  void setDivR(float divR); //Sets resistance divider
 
-  void setOffsetTemp(float offsetT);
-  float getSH_A();
-  float getSH_B();
-  float getSH_C();
+  void setOffsetTemp(float offsetT); //Sets offset temperature
+  float getSH_A(); //Returns Steinhart-Hart coefficient a
+  float getSH_B(); //Returns Steinhart-Hart coefficient b
+  float getSH_C(); //Returns Steinhart-Hart coefficient c
 
 protected:
 
-  float SH_A;
-  float SH_B;
-  float SH_C;
-  float _DIV_R;
-  float _OFFSET_TEMP;
-  NTC_CONNECT_t _NTC_CONNECT;
-  int32_t _EXCITE_VALUE;
-  float _V_IN;
-  float _ADC_GAIN;
-  int adcValue;
-  float resistance;
-  float temperature;
+  float SH_A; // Steinhart-Hart coefficient a
+  float SH_B; // Steinhart-Hart coefficient b
+  float SH_C; // Steinhart-Hart coefficient c
+  float _DIV_R; //Resistance divider
+  float _OFFSET_TEMP; //Offset temperature
+  NTC_CONNECT_t _NTC_CONNECT; //Connection of thermistor and series resistor
+  int32_t _EXCITE_VALUE; //Excitation voltage
+  float _V_IN; //Input voltage
+  float _ADC_GAIN; //ADC gain
+  int adcValue; //ADC value
+  float resistance; //Resistance
+  float temperature; //Temperature
 };
 
 #endif

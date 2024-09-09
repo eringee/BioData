@@ -36,6 +36,7 @@
 // John M. Zurbuchen. Precision thermistor thermometry. Measurement Science Conference Tutorial: Thermometry-Fundamentals and Practice, 2000.
 // http://www.nktherm.com/tec/linearize.html  Steinhart and Hart 式によるサーミスタ抵抗値の温度変換
 
+//Constructor that takes reference temperatures and resistance values, resistance divider, type of connection, offset and ADC resolution
 SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3, float divR, NTC_CONNECT_t ntcConnect, float offsetT, int resolution) :
   _DIV_R(divR),
   _OFFSET_TEMP(offsetT),
@@ -50,8 +51,7 @@ SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, f
   setSHcoef(SH_T1, SH_T2, SH_T3, SH_R1, SH_R2, SH_R3);
 }
 
-//Constructor with no arguments, using default values. 
-//Used when transforming ADC values from external ADC to Celcius. 
+//Constructor that takes the resolution of the ADC as an argument
 SHthermistor::SHthermistor(int resolution) :
   _DIV_R(DEFAULT_DIV_R),
   _OFFSET_TEMP(0),
@@ -67,6 +67,7 @@ SHthermistor::SHthermistor(int resolution) :
 }
 
 
+//Set Steinhart-Hart coefficients
 void SHthermistor::setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1, float SH_R2, float SH_R3) {
   SH_T1 += 273.15;
   SH_T2 += 273.15;
@@ -85,7 +86,7 @@ void SHthermistor::setSHcoef(float SH_T1, float SH_T2, float SH_T3, float SH_R1,
   SH_A = 1 / SH_T1 - SH_C * pow(SH_X1, 3) - SH_B * SH_X1;                                                                   // Coefficient a
 }
 
-//Reads resistance with external ADC value input
+//Reads resistance with ADC value input
 void SHthermistor::readResistance(int ADC) {
     adcValue = float(ADC);
 
@@ -98,46 +99,50 @@ void SHthermistor::readResistance(int ADC) {
    }  
  }
 
-
+//Returns resistance
 float SHthermistor::getResistance(){
   return resistance;
 }
 
+//Returns temperature
 float SHthermistor::getTemperature(){
   return temperature;
 }
 
+//Converts resistance to temperature
 float SHthermistor::r2temp(float resistance) { // calculate temperature from thermistor resistance using Steinhart-Hart equation
   if (resistance == 0) return TH_ERR_DATA;
   return (1 / (SH_A + SH_B * log(resistance) + SH_C * pow(log(resistance), 3)) - 273.15 + _OFFSET_TEMP); // return temperature in Celcius
 }
 
-//Reads temperature with external ADC value input
+//Reads temperature with ADC value input
 float SHthermistor::readTemp(int ADC) {
   readResistance(ADC);
   temperature = r2temp(getResistance());
   return temperature;
 }
 
+//Sets resistance divider
 void SHthermistor::setDivR(float divR) {
   _DIV_R = divR;
 }
 
+//Sets offset temperature
 void SHthermistor::setOffsetTemp(float offsetTemp) {
   _OFFSET_TEMP = offsetTemp;
 }
 
-
+//Returns Steinhart-Hart coefficient a
 float SHthermistor::getSH_A() {
   return SH_A;
 }
 
-
+//Returns Steinhart-Hart coefficient b
 float SHthermistor::getSH_B() {
   return SH_B;
 }
 
-
+//Returns Steinhart-Hart coefficient c
 float SHthermistor::getSH_C() {
   return SH_C;
 }

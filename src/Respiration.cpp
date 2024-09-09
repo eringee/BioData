@@ -28,9 +28,12 @@
  */
 #include "Respiration.h"
 
+
+//=============================================CONSTRUCTORS=============================================//
+// constructor when using internal ADC 
 Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolution) :
   _pin(pin),
-  thermistor(resolution),                  // thermistor
+  thermistor(resolution),                 
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -68,9 +71,9 @@ Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolut
   reset();
 }
 
+// constructor when using external ADC
 Respiration::Respiration(unsigned long (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
-  _pin(0),
-  thermistor(resolution),                  // thermistor
+  thermistor(resolution),                  
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -108,136 +111,140 @@ Respiration::Respiration(unsigned long (*getExternalADCValue)(), unsigned long r
   reset();
 }
 
-void Respiration::reset() {
-  Wire.begin();
-  Wire.setClock(400000);   
 
+//=================================================SET=============================================//
+// Sets certain Plaquette object parameters
+void Respiration::reset() {
   //set peak detector thresholds
   minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
   minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
   minMaxScaledTrough.reloadThreshold(minMaxScaledTroughReloadThreshold);
   minMaxScaledTrough.fallbackTolerance(minMaxScaledTroughFallbackThreshold);
 
+  //set scaler time window (same as normalizer)
   minMaxScaler.timeWindow(normalizerTimeWindow);
 
   // Perform one update.
   sample();
 }
 
+// Sets sample rate
 void Respiration::setSampleRate(unsigned long rate) {
   sampleMetro.frequency(rate);
 }
 
+//=============================================UPDATE=============================================//
+// Updates the signal
 void Respiration::update() {
+  // sample at sampling rate
   if (sampleMetro) {
     sample();
   }
 }
 
-unsigned long Respiration::getRaw()  const {
-return _adcValue ;
-}
-
-float Respiration::getTemperature()  const {
-return _temperature ;
-}
-
+// Reads the signal and passes it to the signal processing functions
 void Respiration::sample() {
-  if(_getExternalADCValue){
+  if(_getExternalADCValue){ // if using external ADC
     _adcValue = _getExternalADCValue();
   } else {
-    _adcValue = analogRead(_pin);
+    _adcValue = analogRead(_pin); // if using Arduino internal ADC
   }
 
-  if(_adcValue >= 0){
-    _temperature = thermistor.readTemp(_adcValue);
-    if(_temperature > -273){
-     peakOrTrough(_temperature);
-     amplitude(_temperature);
-     rpm();
+  if(_adcValue >= 0){ // if ADC value is valid
+    _temperature = thermistor.readTemp(_adcValue); // convert ADC value to temperature
+    if(_temperature > -273){ // if temperature is valid
+     peakOrTrough(_temperature); // base signal processing
+     amplitude(_temperature); // amplitude data processing
+     rpm(); // respiration rate data processing
     }
   }
 }
 
-void Respiration::peakOrTrough(float value){ // base temperature signal processing and peak detection
- value >> smoother >> normalizer;
+// Base temperature signal processing and peak detection
+void Respiration::peakOrTrough(float value){
+ value >> smoother >> normalizer; // smooth and normalize temperature signal
 
   // PEAK DETECTION AND MIN MAX SCALED SIGNAL
-  _minMaxScaled = normalizer >> minMaxScaler;
-  minMaxScaler >> minMaxScaledPeak;
-  minMaxScaler>> minMaxScaledTrough;
-  _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; // store true if exhaling (0 = inhale / 1 = exhale)
+  _minMaxScaled = normalizer >> minMaxScaler; // scale to 0-1
+  minMaxScaler >> minMaxScaledPeak; // peak detection
+  minMaxScaler>> minMaxScaledTrough; // trough detection 
+  _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
+  // store true if exhaling (when trough is detected ; temperature is rising again)
 }
 
-void Respiration::amplitude(float value){ // amplitude data processing
+// Amplitude data processing
+void Respiration::amplitude(float value){ 
    // declare and initialize local variables
   static float min = -273; // base signal value at lowest point in breath cycle
   static float max = -273; // base signal value at highest point in breath cycle
   static float amplitudes[numberOfCycles] = {}; // array of previous breath amplitudes
   static int amplitudeIndex = 0; // index 
-  static float oldestAmplitude;
-
-  // update min and max
-  if (value < min) min = value;
-  if (value > max) max = value;
+  static float oldestAmplitude; // oldest breath amplitude in the array
 
   //AMPLITUDE 
-  if (minMaxScaledPeak){  
-    if(max > -273 && min > -273){
-      _amplitude = abs(max - min); 
+  // find min and max values since last breath cycle
+  if (value < min) min = value; 
+  if (value > max) max = value;
+
+  if (minMaxScaledPeak){  // on every exhale peak
+    if(max > -273 && min > -273){ // if min and max temperatures are valid
+      _amplitude = abs(max - min);  // calculate amplitude
     }
-    min = 273; // reset min to current value
-    max = -273; // reset max to current value
+    min = 273; // reset min to very high temperature
+    max = -273; // reset max to very low temperature
   }
 
-  if(_amplitude >0){
-  // // NORMALIZED AMPLITUDE
+  if(_amplitude >0){ // if amplitude is valid 
+  // NORMALIZED AMPLITUDE
     _amplitude >> amplitudeSmoother >> amplitudeNormalizer; // smooth and normalize amplitude
  
-  // // SCALED AMPLITUDE (clamped from normalized)
+  // SCALED AMPLITUDE (clamped from normalized)
    _clampScaledAmplitude = mapTo01(amplitudeNormalizer, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
+   // scale amplitude by mapping and clamping normalized amplitude
 
-  
-    //AMPLITUDE Rate Of Change
+    //AMPLITUDE RATE OF CHANGE
     if (minMaxScaledPeak) { // on every exhale peak
+    // Circular buffer array of breath amplitudes
       oldestAmplitude = amplitudes[amplitudeIndex];
       amplitudes[amplitudeIndex] = _amplitude;
       amplitudeIndex = (amplitudeIndex + 1) % numberOfCycles;
 
-      if(oldestAmplitude > 0){
-      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // breath amplitude rate of change (Celcius/minute)
+      if(oldestAmplitude > 0){ // if oldest amplitude is valid
+      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // calculate rate of change (Celcius/minute)
      }
-    _amplitudeRateOfChange >> amplitudeRateOfChangeSmoother;
+    _amplitudeRateOfChange >> amplitudeRateOfChangeSmoother; // smooth rate of change
     }
     _amplitudeRateOfChange = amplitudeRateOfChangeSmoother;
     
-    // //AMPLITUDE VARIABILITY
-    _amplitude >> normalizerForAmplitudeVariability; // pipe amplitude into a normalizer with 30 second time window to access standard deviation and mean stats
-    if(oldestAmplitude>0){
+    //AMPLITUDE VARIABILITY
+    _amplitude >> normalizerForAmplitudeVariability; // pipe amplitude into a normalizer to access standard deviation and mean stats
+    if(oldestAmplitude>0){ // if oldest amplitude is valid
     _amplitudeCoefficientOfVariation = (normalizerForAmplitudeVariability.stdDev() / normalizerForAmplitudeVariability.mean())*100;
+    // calculate coefficient of variation
  }
 }
   // //AMPLITUDE Level
     _amplitudeLevel = _clampScaledAmplitude >> amplitudeLevelSmoother; // smooth normalized amplitude
 }
 
-void Respiration::rpm(){ // respiration rate data processing (respirations per minute)
+// Respiration rate data processing
+void Respiration::rpm(){ 
+  // declare and initialize local variables
     static unsigned long intervalChrono = millis(); // respiration interval chronometer (ms) 
     static int intervalIndex = 0; // index
     static float rpms[numberOfCycles] = {}; // array of previous breath rates
-    static unsigned long oldestInterval;
-
+    static unsigned long oldestInterval; // oldest breath interval in the array
 
   //INTERVAL
   if (minMaxScaledPeak){ // on every exhale peak
-    if ((millis() - intervalChrono) >= 300){
+    if ((millis() - intervalChrono) >= 300){ // if interval is greater than 300ms (to prevent errors due to noise)
     _interval = millis() - intervalChrono; // calculate interval between current and previous exhale peak
-    _rpm = 60000 /_interval; 
+    _rpm = 60000 /_interval;  // calculate breath rate (respirations per minute)
     }
     intervalChrono = millis(); // restart interval chronometer
   }
 
-if (_interval > 0){
+if (_interval > 0){ // if interval is valid
       //RPM + NORMALIZED RPM 
       _rpm >> rpmSmoother >> rpmNormalizer; // smooth and normalize rpm
 
@@ -245,47 +252,62 @@ if (_interval > 0){
       _clampScaledRpm = mapTo01(rpmNormalizer, fromMinStdDev, fromMaxStdDev, CONSTRAIN);
 
   if (minMaxScaledPeak){ // on every exhale peak
+    // Circular buffer array of breath intervals
       oldestInterval = intervals[intervalIndex];
       intervals[intervalIndex] = _interval;
       intervalIndex = (intervalIndex + 1) % numberOfCycles;
 
-      _millisPassed = std::accumulate(std::begin(intervals), std::end(intervals), 0); // sum of intervals[]
+      // Calculate sum of intervals
+      _millisPassed = std::accumulate(std::begin(intervals), std::end(intervals), 0); 
 
   //RPM Change
-    if (oldestInterval >0){
-      _rpmRateOfChange = (60000.0/_interval - 60000.0/oldestInterval)/_millisPassed * 60000; // breath rate of change (Celcius/minute) - previous oldestInterval;
+    if (oldestInterval >0){ // if oldest interval is valid
+      _rpmRateOfChange = (60000.0/_interval - 60000.0/oldestInterval)/_millisPassed * 60000; // calculate rate of change (rpm/minute);
     }
-  _rpmRateOfChange >> rpmRateOfChangeSmoother;
+  _rpmRateOfChange >> rpmRateOfChangeSmoother; // smooth rate of change
   }
   _rpmRateOfChange = rpmRateOfChangeSmoother;
 
 
   //RPM VARIABILITY
-  _rpm >> normalizerForRpmVariability; // pipe rpm into a normalizer with 30 second time window to access standard deviation and mean stats
-  if (oldestInterval >0){
+  _rpm >> normalizerForRpmVariability; // pipe rpm into a normalizer to access standard deviation and mean stats
+  if (oldestInterval >0){ // if oldest interval is valid
   _rpmCoefficientOfVariation = (normalizerForRpmVariability.stdDev() / normalizerForRpmVariability.mean())*100;
+  // calculate coefficient of variation
   }
 }
   //RPM Level
   _rpmLevel = _clampScaledRpm >> rpmLevelSmoother; // smooth normalized rpm
 }
 
-//returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getNormalized() {  
+
+//==============================================GET=================================================//
+// Returns raw ADC value
+unsigned long Respiration::getRaw()  const {
+return _adcValue ;
+}
+
+// Returns temperature
+float Respiration::getTemperature()  const {
+return _temperature ;
+}
+
+//Returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalized() const {  
   return normalizer;
 } 
 
-//returns scaled temperature signal (default : returns a float between 0 and 1) : scaled by MinMaxScaler
-float Respiration::getScaled() { 
+//Returns scaled temperature signal (float between 0 and 1) : scaled by minMaxScaler
+float Respiration::getScaled() const { 
   return _minMaxScaled;
 }
 
-//returns true if exhaling (from MinMaxScaler scaled value)
+//Returns true if user is exhaling 
 bool Respiration::isExhaling() const{ 
   return _exhale;
 }
 
-//returns breah amplitude (temperature difference between breath cycle peak and trough)
+//Returns breah amplitude (Celcius)
 float Respiration::getTemperatureAmplitude() const{ 
   if(_amplitude>=0){
       return _amplitude;
@@ -294,64 +316,65 @@ float Respiration::getTemperatureAmplitude() const{
     }
 }
 
- //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getNormalizedAmplitude(){ 
+ //Returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalizedAmplitude() const { 
   return amplitudeNormalizer;
 }
 
- //returns scaled breath amplitude (returns a float between 0 and 1) : scaled by mapping and clamping normalized amplitude
-float Respiration::getScaledAmplitude() { 
+ //Returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
+float Respiration::getScaledAmplitude() const { 
   return _clampScaledAmplitude;
 }
 
-//returns breath amplitude level indicator (normalized amplitude smoothed and scaled between 0 and 1)
-//(0 : smaller than baseline, 0.5 : no significant change from baseline, 1 : larger than baseline)
-float Respiration::getAmplitudeLevel() const{ 
+//Returns breath amplitude level indicator (float between 0 and 1)
+ //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+float Respiration::getAmplitudeLevel() const { 
   return _amplitudeLevel;
 }
 
-//returns breath amplitude rate of change (RoC)
-float Respiration::getAmplitudeChange() const{ 
+//Returns breath amplitude rate of change (Celcius/minute)
+float Respiration::getAmplitudeChange() const { 
   return _amplitudeRateOfChange;
 }
 
-//returns breath amplitude coefficient of variation
-float Respiration::getAmplitudeVariability() const{ 
+//Returns breath amplitude coefficient of variation
+float Respiration::getAmplitudeVariability() const { 
   return _amplitudeCoefficientOfVariation;
 }
 
-//returns respiration interval (milliseconds between breath cycles)
-unsigned long Respiration::getInterval() const{ 
+//Returns respiration interval (milliseconds between breath cycles)
+unsigned long Respiration::getInterval() const { 
   return _interval;
 }
 
-//returns respiration rate (respirations per minute)
-float Respiration::getRpm() const{ 
+//Returns respiration rate (respirations per minute)
+float Respiration::getRpm() const { 
   return _rpm;
 }
 
-//returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is abnormally low, +2 is abnormally high)
-float Respiration::getNormalizedRpm(){ 
+//Returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalizedRpm() const { 
   return rpmNormalizer;
 }
 
- //returns scaled respiration rate (returns a float between 0 and 1) : scaled by mapping and clamping normalized rpm
-float Respiration::getScaledRpm() { 
+ //Returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
+float Respiration::getScaledRpm() const { 
   return _clampScaledRpm;
 }
 
-//returns repiration rate level indicator (0 : slower than baseline, 0.5 : no significant change from baseline, 1 : faster than baseline)
-float Respiration::getRpmLevel() const{ 
+//Returns repiration rate level indicator (float between 0 and 1)
+ //(latest rpm values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+float Respiration::getRpmLevel() const { 
   return _rpmLevel;
 }
 
-//returns respiration rate change indicator (difference between calculated respiration rate of current and previous breath cycle)
-float Respiration::getRpmChange() const{ 
+//Returns respiration rate of change (rpm/minute)
+float Respiration::getRpmChange() const { 
   return _rpmRateOfChange;
 }
 
-//returns respiration rate coefficient of variation
-float Respiration::getRpmVariability() const{ 
+//Returns respiration rate coefficient of variation
+float Respiration::getRpmVariability() const { 
   return _rpmCoefficientOfVariation;
 }
 
