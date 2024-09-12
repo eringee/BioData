@@ -53,7 +53,7 @@ class Respiration {
   //==============CONSTRUCTORS==============//
   Respiration(uint8_t pin, unsigned long rate=50, ADC_RESOLUTION resolution = _10_BITS);   
   // Constructor with Arduino pin + internal ADC. Default respiration samplerate is 50Hz
-  Respiration(unsigned long (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   
+  Respiration(int (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   
   // Constructor with external ADC. Default respiration samplerate is 50Hz
   virtual ~Respiration() {};
 
@@ -214,7 +214,7 @@ class Respiration {
   float getRpmVariability() const; //returns respiration rate coefficient of variation 
 
 private: 
- unsigned long (*_getExternalADCValue)(void); // pointer to function that returns ADC value
+ int (*_getExternalADCValue)(void); // pointer to function that returns ADC value
 };
 
 #endif

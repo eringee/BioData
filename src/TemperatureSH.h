@@ -32,20 +32,10 @@
 #define TEMPERATURESH_h
 #include <Arduino.h> 
 
-//Default voltage input
-#define DEFAULT_VOLTAGE_IN 3.3 // 3.3V default voltage input
-
-//ADC Gain
-// Adjustment factor to convert ADC value to voltage depending on ADC gain
-// needed for use with external ADC ADS1115
-#define ADC_GAIN_6_144V  6.144 * 2
-#define ADC_GAIN_4_096V  4.096 * 2
-#define ADC_GAIN_2_048V  2.048 * 2
-#define ADC_GAIN_1_024V  1.024 * 2
-#define ADC_GAIN_0_512V  0.512 * 2
-#define ADC_GAIN_0_256V  0.256 * 2
-// 4.096V gain used with ADS1115 to maximize range with 3.3V
-#define DEFAULT_ADC_GAIN ADC_GAIN_4_096V 
+//Default voltage reference
+#define DEFAULT_ADC_V_REF 3.3 // Default voltage reference (ex : 1.2V for Teensy 3.2)
+#define DEFAULT_ADC_GAIN 4.096*2 // Default ADC gain (ex: 4.096*2 to maximize range of ADS1115 used with 3.3V)
+//use 1 if no gain
 
 //Data from MA100 Amphenol Thermometrics NTC Thermistor used as default values
 // see datasheet for specifications
@@ -106,7 +96,7 @@ protected:
   float _OFFSET_TEMP; //Offset temperature
   NTC_CONNECT_t _NTC_CONNECT; //Connection of thermistor and series resistor
   int32_t _EXCITE_VALUE; //Excitation voltage
-  float _V_IN; //Input voltage
+  float _ADC_V_REF; //ADC Voltage reference
   float _ADC_GAIN; //ADC gain
   int adcValue; //ADC value
   float resistance; //Resistance

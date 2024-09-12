@@ -24,16 +24,18 @@ to obtain a breath temperature signal that is analysed to extract features.
 
 using namespace pq; // use Plaquette namespace to access Metro class
 
-int LEDPin = 13; // LED pin
-int thermistorPin = A0; // thermistor pin
+// int LEDPin = 13; // LED pin
+int thermistorPin = 0; // thermistor pin
 
 Metro printerMetro (0.1); // print every 0.1 seconds
 
 // Create instance for sensor on analog input pin. 
 // Default sampling rate = 50Hz. Default ADC resolution = 10 bit (Arduino's internal ADC is 10 bits).
- Respiration resp(sensorPin);
+ Respiration resp(thermistorPin, 50, _10_BITS);
 
 void setup() {
+ // Setup Plaquette
+  Plaquette.begin();
  // Initialize serial port
   Serial.begin(9600); 
   
@@ -42,40 +44,53 @@ void setup() {
 }
 
 void loop() {
+  // Call a Plaquette step at every loop
+   Plaquette.step();
+
   // Update sensor. 
    resp.update();
   
+  // Print values
+  // Prints out a few breath features extracted from signal. 
+  // For list of all available features, see documentation
   if (printerMetro) { // print every 0.1 seconds
       // Get temperature 
       // (returns temperature in Celsius)
+        Serial.print("Temperature: ");
+        Serial.print(resp.getTemperature());
+        Serial.print("  ");
+
+      // Get scaled breath signal (returns a float betwee 0 and 1)
+      // 0 = minimum temperature, inhale
+      // 1 = maxmimum temperature, exhale
         Serial.print("Scaled: ");
         Serial.print(resp.getScaled());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Exhaling ? Returns true if user is exhaling
-        Serial.print("Exhaling: ");
+        Serial.print("Exhaling:");
         Serial.print(resp.isExhaling());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Get amplitude level
       // (latest breath amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("Amplitude level: ");
+        Serial.print("Amplitude_level: ");
         Serial.print(resp.getAmplitudeLevel());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Get RPM (respirations per minute) level 
       // (latest RPM values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("RPM level: ");
+        Serial.print("RPM_level: ");
         Serial.print(resp.getRpmLevel());   
-        Serial.print(" ");
+        Serial.print("  ");
 
       Serial.println(" ");
   }    
 
-  // An example of how to do something when user is exaling
-  if(resp.isExhaling) { // if the user is exhaling
-    digitalWrite(LEDPin, HIGH);
-  } else{
-    digitalWrite(LEDPin, LOW);
-  }                               
+  // // An example of how to do something when user is exaling
+  // if(resp.isExhaling) { // if the user is exhaling
+  //   digitalWrite(LEDPin, HIGH);
+  // } else{
+  //   digitalWrite(LEDPin, LOW);
+  // }                               
 }   

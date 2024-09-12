@@ -42,7 +42,7 @@ SHthermistor::SHthermistor(float SH_T1, float SH_T2, float SH_T3, float SH_R1, f
   _OFFSET_TEMP(offsetT),
   _NTC_CONNECT(ntcConnect),
   _EXCITE_VALUE(resolution),
-  _V_IN(DEFAULT_VOLTAGE_IN),
+  _ADC_V_REF(DEFAULT_ADC_V_REF),
   _ADC_GAIN(DEFAULT_ADC_GAIN),
   adcValue(0),
   resistance(0),
@@ -57,7 +57,7 @@ SHthermistor::SHthermistor(int resolution) :
   _OFFSET_TEMP(0),
   _NTC_CONNECT(DEFAULT_NTC_CONNECT),
   _EXCITE_VALUE(resolution),
-  _V_IN(DEFAULT_VOLTAGE_IN),
+  _ADC_V_REF(DEFAULT_ADC_V_REF),
   _ADC_GAIN(DEFAULT_ADC_GAIN),
   adcValue(0),
   resistance(0),
@@ -92,10 +92,13 @@ void SHthermistor::readResistance(int ADC) {
 
     float voltageOut = (adcValue / float(_EXCITE_VALUE)) * _ADC_GAIN;
 
+
   if (_NTC_CONNECT == NTC_GND) {
-    resistance = (voltageOut * _DIV_R)/(_V_IN-voltageOut);
+    resistance = (voltageOut * _DIV_R)/(_ADC_V_REF-voltageOut);
+     // r = _DIV_R * (float)Ain /(float)(_EXCITE_VALUE - Ain);
    } else {
-    resistance = ((_V_IN * _DIV_R)/voltageOut)-_DIV_R;
+    resistance = ((_ADC_V_REF * _DIV_R)/voltageOut)-_DIV_R;
+     // r = _DIV_R * (((float)_EXCITE_VALUE/(float)Ain) - 1);
    }  
  }
 

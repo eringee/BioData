@@ -17,75 +17,110 @@ the Free Software Foundation.
 
 /*
 The sensor used here is a thermistor (temperature sensor), placed at airway entrance 
-to obtain a breath temperature signal that is analysed to extract features.
+to obtain a temperature signal that is analysed to extract breath features.
 
 Arduino board's internal ADCs are usually limited to 10 bit values.
 To get higher resolution in the breath signal, users might want to use an external ADC.
+In this example, we are using the ADS1115 (16 bit resolution) and Rob Tillaart's "ADS1X15" library (https://github.com/RobTillaart/ADS1X15)
+Consult the ADS1115 datasheet for more information.
 */ 
 
-#include "Respiration.h"
+#include "Respiration.h" // inclue BioData Respiration module
+#include <ADS1X15.h> // include external ADC library
 
-using namespace pq; // use Plaquette namespace to access Metro class
 
 int LEDPin = 13; // LED pin
-int thermistorPin = A0; // thermistor pin on the external ADC
+int thermistorPin = 0; // thermistor pin on the external ADC
+
+using namespace pq; // use namespace pq to access Plaquette objects in Arduino IDE
 
 Metro printerMetro (0.1); // print every 0.1 seconds
 
+ADS1115 ADS(0x49); // External ADC address
+int adcValue; // variable for ADC value
+
 // Create instance for sensor 
- Respiration resp(unsigned long *getADCValue, 50, _16_BITS); 
- // Argument 1 : function to get external ADC value (will be defined below)
- // Argument 2 : sampling rate (here, 50 Hz)
- // Argument 3 : external ADC's resolution (format : _##_BITS)
- // In this example, we are using the ADS1115 and the ADS1X15 library by Rob Tillaart
+ Respiration resp(&getADCValue, 50, _16_BITS); 
+//  Argument 1 : function to get external ADC value 
+//  Argument 2 : sampling rate (here, 50 Hz)
+//  Argument 3 : external ADC's resolution (format : _##_BITS)
 
-unsigned long getADCValue(){
-
+// Function to get external ADC value 
+// This function will get called everytime a Respiration object peforms a sample()
+// This function must have no arguments and return an "int"
+int getADCValue(){ 
+ return adcValue;
 }
 
 void setup() {
+ // Setup Plaquette
+  Plaquette.begin();
+
  // Initialize serial port
   Serial.begin(9600); 
   
-  // Initialize sensor.
-   resp.reset();
+ // Initialize sensor.
+  resp.reset();
+
+ // Setup external ADC
+  Wire.begin();
+  ADS.begin();
+  ADS.setGain(1);      //  4.096V
+  ADS.setDataRate(7);  //  0 = slow   4 = medium   7 = fast
+  ADS.setMode(0);      //  continuous mode
+  ADS.readADC(thermistorPin);      //  first read to trigger
 }
 
 void loop() {
-  //
+  // Call a Plaquette step at every loop
+   Plaquette.step();
 
   // Update sensor. 
    resp.update();
-  
+
+  // Read external ADC
+   adcValue = ADS.getValue();
+
+  // Print values
+  // Prints out a few breath features extracted from signal. 
+  // For list of all available features, see documentation
   if (printerMetro) { // print every 0.1 seconds
+  Serial.println(resp.getRaw());
       // Get temperature 
       // (returns temperature in Celsius)
+        Serial.print("Temperature: ");
+        Serial.print(resp.getTemperature());
+        Serial.print("  ");
+
+      // Get scaled breath signal (returns a float betwee 0 and 1)
+      // 0 = minimum temperature, inhale
+      // 1 = maxmimum temperature, exhale
         Serial.print("Scaled: ");
         Serial.print(resp.getScaled());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Exhaling ? Returns true if user is exhaling
-        Serial.print("Exhaling: ");
+        Serial.print("Exhaling:");
         Serial.print(resp.isExhaling());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Get amplitude level
       // (latest breath amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("Amplitude level: ");
+        Serial.print("Amplitude_level: ");
         Serial.print(resp.getAmplitudeLevel());
-        Serial.print(" ");
+        Serial.print("  ");
 
       // Get RPM (respirations per minute) level 
       // (latest RPM values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("RPM level: ");
+        Serial.print("RPM_level: ");
         Serial.print(resp.getRpmLevel());   
-        Serial.print(" ");
+        Serial.print("  ");
 
       Serial.println(" ");
   }    
 
-  // An example of how to do something when user is exaling
-  if(resp.isExhaling) { // if the user is exhaling
+ // An example of how to do something when user is exaling
+  if(resp.isExhaling()) { // if the user is exhaling
     digitalWrite(LEDPin, HIGH);
   } else{
     digitalWrite(LEDPin, LOW);

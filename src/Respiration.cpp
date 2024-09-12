@@ -72,7 +72,7 @@ Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolut
 }
 
 // constructor when using external ADC
-Respiration::Respiration(unsigned long (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
+Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
   thermistor(resolution),                  
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
@@ -232,7 +232,6 @@ void Respiration::rpm(){
   // declare and initialize local variables
     static unsigned long intervalChrono = millis(); // respiration interval chronometer (ms) 
     static int intervalIndex = 0; // index
-    static float rpms[numberOfCycles] = {}; // array of previous breath rates
     static unsigned long oldestInterval; // oldest breath interval in the array
 
   //INTERVAL
