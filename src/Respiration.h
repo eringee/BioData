@@ -29,7 +29,7 @@
  */
 #include <Arduino.h>
 #include <Wire.h>  
-// #include <numeric>
+#include <numeric>
 
 #include "PlaquetteLib.h" //https://sofapirate.github.io/Plaquette/index.html
 

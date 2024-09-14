@@ -48,7 +48,6 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   rpmLevelSmoother(rpmLevelSmootherFactor),
   rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
   minMaxScaler(),
-  _temperature(25),
   _adcValue(13000),
   _minMaxScaled(0.5),
   _exhale(0),
@@ -87,7 +86,6 @@ Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate) :
   rpmLevelSmoother(rpmLevelSmootherFactor),
   rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
   minMaxScaler(),
-  _temperature(25),
   _adcValue(13000),
   _minMaxScaled(0.5),
   _exhale(0),
@@ -205,7 +203,7 @@ void Respiration::amplitude(float value){
       amplitudeIndex = (amplitudeIndex + 1) % numberOfCycles;
 
       if(oldestAmplitude > 0){ // if oldest amplitude is valid
-      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // calculate rate of change (Celcius/minute)
+      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // calculate rate of change (ADC points/minute)
      }
     _amplitudeRateOfChange >> amplitudeRateOfChangeSmoother; // smooth rate of change
     }
@@ -321,7 +319,7 @@ float Respiration::getAmplitudeLevel() const {
   return _amplitudeLevel;
 }
 
-//Returns breath amplitude rate of change (Celcius/minute)
+//Returns breath amplitude rate of change (ADC points/minute)
 float Respiration::getAmplitudeChange() const { 
   return _amplitudeRateOfChange;
 }

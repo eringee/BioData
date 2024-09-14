@@ -87,7 +87,7 @@ void loop() {
   }    
 
   // An example of how to do something when user is exaling
-  if(resp.isExhaling) { // if the user is exhaling
+  if(resp.isExhaling()) { // if the user is exhaling
     digitalWrite(LEDPin, HIGH);
   } else{
     digitalWrite(LEDPin, LOW);
