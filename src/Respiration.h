@@ -28,9 +28,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
-#include "TemperatureSH.h"
 #include <Wire.h>  
-#include <numeric>
+// #include <numeric>
 
 #include "PlaquetteLib.h" //https://sofapirate.github.io/Plaquette/index.html
 
@@ -39,29 +38,18 @@ using namespace pq;
 #ifndef RESP_H_
 #define RESP_H_
 
-// ADC resolution
-typedef enum {
-  _10_BITS = 1024,
-  _12_BITS = 4096,
-  _14_BITS = 16384,
-  _16_BITS = 65536
-} ADC_RESOLUTION;
-
 class Respiration {
 
   public:   
   //==============CONSTRUCTORS==============//
-  Respiration(uint8_t pin, unsigned long rate=50, ADC_RESOLUTION resolution = _10_BITS);   
+  Respiration(uint8_t pin, unsigned long rate=50);   
   // Constructor with Arduino pin + internal ADC. Default respiration samplerate is 50Hz
-  Respiration(int (*getExternalADCValue)(), unsigned long rate=50, ADC_RESOLUTION resolution = _16_BITS);   
+  Respiration(int (*getExternalADCValue)(), unsigned long rate=50);   
   // Constructor with external ADC. Default respiration samplerate is 50Hz
   virtual ~Respiration() {};
 
   // Analog pin the Respiration sensor is connected to, if using Arduino pin
   uint8_t _pin;
-
-  //SHthermistor object to calculate temperature from ADC value with Steinhart-Hart equation
-  SHthermistor thermistor;
 
   // Sample rate in Hz.
   unsigned long sampleRate;
@@ -144,8 +132,7 @@ class Respiration {
         MinMaxScaler minMaxScaler;
     
     //-----VARIABLES-----//
-        // Temperature
-        float _temperature;
+        // Raw signal
         int _adcValue;
         float _minMaxScaled;
 
@@ -182,21 +169,18 @@ class Respiration {
   void update();
 
   void sample();   // reads the signal and passes it to the signal processing functions
-  void peakOrTrough(float value); // base temperature signal processing and peak detection
+  void peakOrTrough(float value); // base ADC signal processing and peak detection
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
 
   // Returns raw ADC signal.
   unsigned long getRaw() const;
 
-  // Returns temperature signal in Celcius, converted with Steinhart-Hart equation.
-  float getTemperature() const;
-
-  float getNormalized() const; //returns normalized temperature signal
-  float getScaled() const; //returns min-max scaled temperature signal
+  float getNormalized() const; //returns normalized ADC signal
+  float getScaled() const; //returns min-max scaled ADC signal
   bool isExhaling() const; //returns true if user is exhaling 
 
-  float getTemperatureAmplitude() const; //returns breah amplitude (difference bewteen maximim and minimum temperature in latest breath cycle)
+  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum ADC value in latest breath cycle)
   float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
   float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
   float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 

@@ -24,14 +24,15 @@ to obtain a breath temperature signal that is analysed to extract features.
 
 using namespace pq; // use Plaquette namespace to access Metro class
 
-// int LEDPin = 13; // LED pin
+int LEDPin = 13; // LED pin
 int thermistorPin = 0; // thermistor pin
 
 Metro printerMetro (0.1); // print every 0.1 seconds
 
 // Create instance for sensor on analog input pin. 
-// Default sampling rate = 50Hz. Default ADC resolution = 10 bit (Arduino's internal ADC is 10 bits).
- Respiration resp(thermistorPin, 50, _10_BITS);
+//  Argument 1 : input pin 
+//  Argument 2 (optional): sampling rate (default = 50 Hz)
+ Respiration resp(thermistorPin);
 
 void setup() {
  // Setup Plaquette
@@ -52,17 +53,15 @@ void loop() {
   
   // Print values
   // Prints out a few breath features extracted from signal. 
-  // For list of all available features, see documentation
+  // For list of all available features, see "Respiration.h"
   if (printerMetro) { // print every 0.1 seconds
-      // Get temperature 
-      // (returns temperature in Celsius)
-        Serial.print("Temperature: ");
-        Serial.print(resp.getTemperature());
+      // Get raw ADC value
+        Serial.print("Raw: ");
+        Serial.print(resp.getRaw());
         Serial.print("  ");
-
-      // Get scaled breath signal (returns a float betwee 0 and 1)
-      // 0 = minimum temperature, inhale
-      // 1 = maxmimum temperature, exhale
+      // Get scaled breath signal (returns a float between 0 and 1)
+      // 0 = minimum value, inhale
+      // 1 = maxmimum value, exhale
         Serial.print("Scaled: ");
         Serial.print(resp.getScaled());
         Serial.print("  ");
@@ -87,10 +86,10 @@ void loop() {
       Serial.println(" ");
   }    
 
-  // // An example of how to do something when user is exaling
-  // if(resp.isExhaling) { // if the user is exhaling
-  //   digitalWrite(LEDPin, HIGH);
-  // } else{
-  //   digitalWrite(LEDPin, LOW);
-  // }                               
+  // An example of how to do something when user is exaling
+  if(resp.isExhaling) { // if the user is exhaling
+    digitalWrite(LEDPin, HIGH);
+  } else{
+    digitalWrite(LEDPin, LOW);
+  }                               
 }   

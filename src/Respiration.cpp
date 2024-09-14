@@ -31,9 +31,8 @@
 
 //=============================================CONSTRUCTORS=============================================//
 // constructor when using internal ADC 
-Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolution) :
-  _pin(pin),
-  thermistor(resolution),                 
+Respiration::Respiration(uint8_t pin, unsigned long rate) :
+  _pin(pin),              
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -72,8 +71,7 @@ Respiration::Respiration(uint8_t pin, unsigned long rate, ADC_RESOLUTION resolut
 }
 
 // constructor when using external ADC
-Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate, ADC_RESOLUTION resolution) :
-  thermistor(resolution),                  
+Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate) :                
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -151,12 +149,9 @@ void Respiration::sample() {
   }
 
   if(_adcValue >= 0){ // if ADC value is valid
-    _temperature = thermistor.readTemp(_adcValue); // convert ADC value to temperature
-    if(_temperature > -273){ // if temperature is valid
-     peakOrTrough(_temperature); // base signal processing
-     amplitude(_temperature); // amplitude data processing
-     rpm(); // respiration rate data processing
-    }
+    peakOrTrough(_adcValue); // base signal processing
+    amplitude(_adcValue); // amplitude data processing
+    rpm(); // respiration rate data processing
   }
 }
 
@@ -286,17 +281,12 @@ unsigned long Respiration::getRaw()  const {
 return _adcValue ;
 }
 
-// Returns temperature
-float Respiration::getTemperature()  const {
-return _temperature ;
-}
-
-//Returns normalized temperature signal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+//Returns normalized ADCsignal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
 float Respiration::getNormalized() const {  
   return normalizer;
 } 
 
-//Returns scaled temperature signal (float between 0 and 1) : scaled by minMaxScaler
+//Returns scaled ADC signal (float between 0 and 1) : scaled by minMaxScaler
 float Respiration::getScaled() const { 
   return _minMaxScaled;
 }
@@ -306,8 +296,8 @@ bool Respiration::isExhaling() const{
   return _exhale;
 }
 
-//Returns breah amplitude (Celcius)
-float Respiration::getTemperatureAmplitude() const{ 
+//Returns raw breah amplitude (ADC value)
+unsigned long Respiration::getRawAmplitude() const{ 
   if(_amplitude>=0){
       return _amplitude;
     } else {

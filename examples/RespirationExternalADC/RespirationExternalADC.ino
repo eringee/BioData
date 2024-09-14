@@ -28,7 +28,6 @@ Consult the ADS1115 datasheet for more information.
 #include "Respiration.h" // inclue BioData Respiration module
 #include <ADS1X15.h> // include external ADC library
 
-
 int LEDPin = 13; // LED pin
 int thermistorPin = 0; // thermistor pin on the external ADC
 
@@ -40,18 +39,16 @@ ADS1115 ADS(0x49); // External ADC address
 int adcValue; // variable for ADC value
 
 // Create instance for sensor 
- Respiration resp(&getADCValue, 50, _16_BITS); 
 //  Argument 1 : function to get external ADC value 
-//  Argument 2 : sampling rate (here, 50 Hz)
-//  Argument 3 : external ADC's resolution (format : _##_BITS)
+//  Argument 2 (optional): sampling rate (default = 50 Hz)
+ Respiration resp(&getADCValue); 
 
 // Function to get external ADC value 
 // This function will get called everytime a Respiration object peforms a sample()
 // This function must have no arguments and return an "int"
 int getADCValue(){ 
  return adcValue;
-}
-
+} 
 void setup() {
  // Setup Plaquette
   Plaquette.begin();
@@ -83,18 +80,16 @@ void loop() {
 
   // Print values
   // Prints out a few breath features extracted from signal. 
-  // For list of all available features, see documentation
+  // For list of all available features, see "Respiration.h"
   if (printerMetro) { // print every 0.1 seconds
-  Serial.println(resp.getRaw());
-      // Get temperature 
-      // (returns temperature in Celsius)
-        Serial.print("Temperature: ");
-        Serial.print(resp.getTemperature());
+      // Get raw ADC value
+        Serial.print("Raw: ");
+        Serial.print(resp.getRaw());
         Serial.print("  ");
 
-      // Get scaled breath signal (returns a float betwee 0 and 1)
-      // 0 = minimum temperature, inhale
-      // 1 = maxmimum temperature, exhale
+      // Get scaled breath signal (returns a float between 0 and 1)
+      // 0 = minimum value, inhale
+      // 1 = maxmimum value, exhale
         Serial.print("Scaled: ");
         Serial.print(resp.getScaled());
         Serial.print("  ");
