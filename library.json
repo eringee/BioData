@@ -1,0 +1,43 @@
+{
+  "name": "BioData",
+  "version": "0.2.0",
+  "description": "An Arduino library for interpreting biological signals, BioData makes it easier to collect data relative to photoplethysmograph (heart sensor), including normalizing the signal, obtaining BPM, and heartbeat. ",
+  "keywords": "sensors, biodata, biofeedback, heart, electrodermal, respiration, photoplethysmograph",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/possibly-human/BioData#No_temperature"
+  },
+  "authors":
+  [
+    {
+      "name": "Erin Gee",
+      "url": "http://www.eringee.net"
+    },
+    {
+      "name": "Martin Peach",
+      "url": "https://puredata.info/Members/martinrp/OSCobjects"
+    },
+    {
+      "name": "Thomas Ouellet-Fredericks",
+      "url": "https://github.com/thomasfredericks"
+    },
+    {
+      "name": "Sofian Audry",
+      "url": "https://github.com/sofian"
+    },
+    {
+      "name": "Luana Belinsky",
+      "url": "https://github.com/possibly-human"
+    }
+  ],
+  "license": "MIT",
+  "dependencies":
+  [{
+      "name": "Plaquette",
+      "version": "https://github.com/SofaPirate/Plaquette#develop"
+  }
+  ],
+  "frameworks": "*",
+  "platforms": "*"
+}
