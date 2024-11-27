@@ -65,9 +65,12 @@ Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), u
   _rpmLevel(0.5),
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
-  _millisPassed(0),
-  setSampleRate(rate),
-  reset()
+  _millisPassed(0)
+  {
+   setSampleRate(rate);
+   reset();
+  }
+
   {}
 
 //=================================================SET=============================================//
@@ -102,14 +105,14 @@ void Respiration::update(float signal) {
 
 // Reads the signal and passes it to the signal processing functions
 void Respiration::sample(float signal) {
-  switch (mode) {
-  case Mode::PIN:
+  switch (_mode) {
+  case PIN:
      _adcValue = analogRead(_pin); // if using Arduino internal ADC
     break;
-  case Mode::EXTERNAL_ADC:
+  case EXTERNAL_ADC:
      _adcValue = _getExternalADCValue();
     break;
-  case Mode::SIGNAL:
+  case SIGNAL:
     _adcValue = signal;
     break;
 }
