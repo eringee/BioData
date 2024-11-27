@@ -71,7 +71,6 @@ Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), u
    reset();
   }
 
-  {}
 
 //=================================================SET=============================================//
 // Sets certain Plaquette object parameters
