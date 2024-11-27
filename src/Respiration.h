@@ -38,13 +38,14 @@ using namespace pq;
 #ifndef RESP_H_
 #define RESP_H_
 
-class Respiration {
-
 enum Mode {
   PIN,
   EXTERNAL_ADC,
   SIGNAL
 };
+
+
+class Respiration {
 
   public:   
   //==============CONSTRUCTORS==============//
