@@ -9,6 +9,7 @@
  * (c) 2018 Erin Gee
  *
  * Contributing authors:
+ * (c) 2024 Luana Belinsky
  * (c) 2018 Erin Gee
  * (c) 2018 Sofian Audry
  * (c) 2017 Thomas Ouellet Fredericks
@@ -31,8 +32,11 @@
 
 //=============================================CONSTRUCTORS=============================================//
 // constructor when using internal ADC 
-Respiration::Respiration(uint8_t pin, unsigned long rate) :
-  _pin(pin),              
+Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), unsigned long rate) :
+{
+  _getExternalADCValue(getExternalADCValue),
+  _pin(pin),
+  _mode(mode),
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -48,7 +52,7 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   rpmLevelSmoother(rpmLevelSmootherFactor),
   rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
   minMaxScaler(),
-  _adcValue(13000),
+  _adcValue(0),
   _minMaxScaled(0.5),
   _exhale(0),
   _amplitude(-FLT_MIN),
@@ -63,50 +67,9 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
   _millisPassed(0),
-  _getExternalADCValue(nullptr)
-{
   setSampleRate(rate);
   reset();
 }
-
-// constructor when using external ADC
-Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate) :                
-  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
-  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
-  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
-  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow),
-  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow),
-  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX),
-  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN),
-  smoother(smootherFactor),
-  amplitudeSmoother(amplitudeSmootherFactor),
-  amplitudeLevelSmoother(amplitudeLevelSmootherFactor),
-  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor),
-  rpmSmoother(rpmSmootherFactor),
-  rpmLevelSmoother(rpmLevelSmootherFactor),
-  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
-  minMaxScaler(),
-  _adcValue(13000),
-  _minMaxScaled(0.5),
-  _exhale(0),
-  _amplitude(-FLT_MIN),
-  _clampScaledAmplitude(0.5),
-  _amplitudeLevel(0.5),
-  _amplitudeRateOfChange(0),
-  _amplitudeCoefficientOfVariation(0),
-  _interval(0),
-  _rpm(12),
-  _clampScaledRpm(0.5),
-  _rpmLevel(0.5),
-  _rpmRateOfChange(0),
-  _rpmCoefficientOfVariation(0),
-  _millisPassed(0),
-  _getExternalADCValue(getExternalADCValue)
-{
-  setSampleRate(rate);
-  reset();
-}
-
 
 //=================================================SET=============================================//
 // Sets certain Plaquette object parameters
@@ -139,12 +102,18 @@ void Respiration::update() {
 }
 
 // Reads the signal and passes it to the signal processing functions
-void Respiration::sample() {
-  if(_getExternalADCValue){ // if using external ADC
-    _adcValue = _getExternalADCValue();
-  } else {
-    _adcValue = analogRead(_pin); // if using Arduino internal ADC
-  }
+void Respiration::sample(float signal) {
+  switch (mode) {
+  case Mode::PIN:
+     _adcValue = analogRead(_pin); // if using Arduino internal ADC
+    break;
+  case Mode::EXTERNAL_ADC:
+     _adcValue = _getExternalADCValue();
+    break;
+  case Mode::SIGNAL:
+    _adcValue = signal;
+    break;
+}
 
   if(_adcValue >= 0){ // if ADC value is valid
     peakOrTrough(_adcValue); // base signal processing

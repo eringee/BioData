@@ -9,10 +9,10 @@
  * (c) 2018 Erin Gee
  *
  * Contributing authors:
+ * (c) 2024 Luana Belinsky
  * (c) 2018 Erin Gee
  * (c) 2018 Sofian Audry
  * (c) 2017 Thomas Ouellet Fredericks
- * (c) 2024 Luana Belinsky
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,13 +40,20 @@ using namespace pq;
 
 class Respiration {
 
+enum struct Mode {
+  PIN,
+  EXTERNAL_ADC,
+  SIGNAL
+};
+
   public:   
   //==============CONSTRUCTORS==============//
-  Respiration(uint8_t pin, unsigned long rate=50);   
-  // Constructor with Arduino pin + internal ADC. Default respiration samplerate is 50Hz
-  Respiration(int (*getExternalADCValue)(), unsigned long rate=50);   
-  // Constructor with external ADC. Default respiration samplerate is 50Hz
+  Respiration(Mode mode, uint8_t pin = 0, int (*getExternalADCValue)() = nullptr, unsigned long rate=50);   
+  // Constructor 
   virtual ~Respiration() {};
+
+  // Mode
+  Mode _mode;
 
   // Analog pin the Respiration sensor is connected to, if using Arduino pin
   uint8_t _pin;
@@ -166,21 +173,21 @@ class Respiration {
   void setSampleRate(unsigned long rate);
 
   // Calls sample() at sampling rate
-  void update();
+  void update(float signal = 0);
 
   void sample();   // reads the signal and passes it to the signal processing functions
-  void peakOrTrough(float value); // base ADC signal processing and peak detection
+  void peakOrTrough(float value); // base signal processing and peak detection
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
 
   // Returns raw ADC signal.
   unsigned long getRaw() const;
 
-  float getNormalized() const; //returns normalized ADC signal
-  float getScaled() const; //returns min-max scaled ADC signal
+  float getNormalized() const; //returns normalized initial signal
+  float getScaled() const; //returns min-max scaled initial signal
   bool isExhaling() const; //returns true if user is exhaling 
 
-  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum ADC value in latest breath cycle)
+  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum value in latest breath cycle)
   float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
   float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
   float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 
@@ -199,6 +206,7 @@ class Respiration {
 
 private: 
  int (*_getExternalADCValue)(void); // pointer to function that returns ADC value
+ float (*_getMeasurement)(void); // pointer to function that returns measurement (ex : temperature)
 };
 
 #endif
