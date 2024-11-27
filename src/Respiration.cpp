@@ -33,8 +33,9 @@
 //=============================================CONSTRUCTORS=============================================//
 // CONSTRUCTOR
 Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), unsigned long rate) :
-  _mode(mode), _pin(pin), _getExternalADCValue(getExternalADCValue)
-{
+  _mode(mode),
+  _pin(pin), 
+  _getExternalADCValue(getExternalADCValue),
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -65,9 +66,9 @@ Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), u
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
   _millisPassed(0),
-  setSampleRate(rate);
-  reset();
-}
+  setSampleRate(rate),
+  reset()
+  {}
 
 //=================================================SET=============================================//
 // Sets certain Plaquette object parameters
