@@ -32,10 +32,7 @@
 
 //=============================================CONSTRUCTORS=============================================//
 // CONSTRUCTOR
-Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), unsigned long rate) :
-  _mode(mode),
-  _pin(pin), 
-  _getExternalADCValue(getExternalADCValue),
+Respiration::Respiration(unsigned long rate) :
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -51,7 +48,7 @@ Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), u
   rpmLevelSmoother(rpmLevelSmootherFactor),
   rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
   minMaxScaler(),
-  _adcValue(0),
+  _signal(0),
   _minMaxScaled(0.5),
   _exhale(0),
   _amplitude(-FLT_MIN),
@@ -67,26 +64,21 @@ Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), u
   _rpmCoefficientOfVariation(0),
   _millisPassed(0)
   {
-   setSampleRate(rate);
-   reset();
+    //set peak detector thresholds
+    minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
+    minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
+    minMaxScaledTrough.reloadThreshold(minMaxScaledTroughReloadThreshold);
+    minMaxScaledTrough.fallbackTolerance(minMaxScaledTroughFallbackThreshold);
+
+    //set scaler time window (same as normalizer)
+    minMaxScaler.timeWindow(normalizerTimeWindow);
+
+    //set sample rate
+    setSampleRate(rate);
   }
 
 
 //=================================================SET=============================================//
-// Sets certain Plaquette object parameters
-void Respiration::reset() {
-  //set peak detector thresholds
-  minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
-  minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
-  minMaxScaledTrough.reloadThreshold(minMaxScaledTroughReloadThreshold);
-  minMaxScaledTrough.fallbackTolerance(minMaxScaledTroughFallbackThreshold);
-
-  //set scaler time window (same as normalizer)
-  minMaxScaler.timeWindow(normalizerTimeWindow);
-
-  // Perform one update.
-  sample();
-}
 
 // Sets sample rate
 void Respiration::setSampleRate(unsigned long rate) {
@@ -104,21 +96,10 @@ void Respiration::update(float signal) {
 
 // Reads the signal and passes it to the signal processing functions
 void Respiration::sample(float signal) {
-  switch (_mode) {
-  case PIN:
-     _adcValue = analogRead(_pin); // if using Arduino internal ADC
-    break;
-  case EXTERNAL_ADC:
-     _adcValue = _getExternalADCValue();
-    break;
-  case SIGNAL:
-    _adcValue = signal;
-    break;
-}
-
-  if(_adcValue >= 0){ // if ADC value is valid
-    peakOrTrough(_adcValue); // base signal processing
-    amplitude(_adcValue); // amplitude data processing
+  _signal = signal;
+  if(_signal >= 0){ // if signal value is valid
+    peakOrTrough(_signal); // base signal processing
+    amplitude(_signal); // amplitude data processing
     rpm(); // respiration rate data processing
   }
 }
@@ -173,7 +154,7 @@ void Respiration::amplitude(float value){
       amplitudeIndex = (amplitudeIndex + 1) % numberOfCycles;
 
       if(oldestAmplitude > 0){ // if oldest amplitude is valid
-      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // calculate rate of change (ADC points/minute)
+      _amplitudeRateOfChange = (_amplitude - oldestAmplitude)/_millisPassed * 60000; // calculate rate of change (signal units/minute)
      }
     _amplitudeRateOfChange >> amplitudeRateOfChangeSmoother; // smooth rate of change
     }
@@ -244,17 +225,17 @@ if (_interval > 0){ // if interval is valid
 
 
 //==============================================GET=================================================//
-// Returns raw ADC value
+// Returns raw signal value
 unsigned long Respiration::getRaw()  const {
-return _adcValue ;
+return _signal ;
 }
 
-//Returns normalized ADCsignal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+//Returns normalized signal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
 float Respiration::getNormalized() const {  
   return normalizer;
 } 
 
-//Returns scaled ADC signal (float between 0 and 1) : scaled by minMaxScaler
+//Returns scaled signal (float between 0 and 1) : scaled by minMaxScaler
 float Respiration::getScaled() const { 
   return _minMaxScaled;
 }
@@ -264,7 +245,7 @@ bool Respiration::isExhaling() const{
   return _exhale;
 }
 
-//Returns raw breah amplitude (ADC value)
+//Returns raw breah amplitude (signal value)
 unsigned long Respiration::getRawAmplitude() const{ 
   if(_amplitude>=0){
       return _amplitude;
@@ -289,7 +270,7 @@ float Respiration::getAmplitudeLevel() const {
   return _amplitudeLevel;
 }
 
-//Returns breath amplitude rate of change (ADC points/minute)
+//Returns breath amplitude rate of change (signal units/minute)
 float Respiration::getAmplitudeChange() const { 
   return _amplitudeRateOfChange;
 }

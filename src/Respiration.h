@@ -38,29 +38,13 @@ using namespace pq;
 #ifndef RESP_H_
 #define RESP_H_
 
-enum Mode {
-  PIN,
-  EXTERNAL_ADC,
-  SIGNAL
-};
-
-
 class Respiration {
 
   public:   
   //==============CONSTRUCTORS==============//
-  Respiration(Mode mode, uint8_t pin = 0, int (*getExternalADCValue)() = nullptr, unsigned long rate=50);   
+  Respiration(unsigned long rate=50);   
   // Constructor 
   virtual ~Respiration() {};
-
-  // Mode
-  Mode _mode;
-
-  // Analog pin the Respiration sensor is connected to, if using Arduino pin
-  uint8_t _pin;
-
-  // Sample rate in Hz.
-  unsigned long sampleRate;
 
   // Metro object for sample timing
   Metro sampleMetro;
@@ -141,7 +125,7 @@ class Respiration {
     
     //-----VARIABLES-----//
         // Raw signal
-        int _adcValue;
+        int _signal;
         float _minMaxScaled;
 
         // exhale (exhale = temperature peak)
@@ -181,7 +165,7 @@ class Respiration {
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
 
-  // Returns raw ADC signal.
+  // Returns raw signal.
   unsigned long getRaw() const;
 
   float getNormalized() const; //returns normalized initial signal
@@ -204,9 +188,6 @@ class Respiration {
   //(latest amplitudes are generally ===> 0 :  slower than baseline, 0.5 : similar to baseline, 1 : faster than baseline)
   float getRpmChange() const; //returns respiration rate rate of change
   float getRpmVariability() const; //returns respiration rate coefficient of variation 
-
-private: 
- int (*_getExternalADCValue)(void); // pointer to function that returns ADC value
 };
 
 #endif
