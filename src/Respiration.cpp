@@ -31,12 +31,10 @@
 
 
 //=============================================CONSTRUCTORS=============================================//
-// constructor when using internal ADC 
+// CONSTRUCTOR
 Respiration::Respiration(Mode mode, uint8_t pin, int (*getExternalADCValue)(), unsigned long rate) :
+  _mode(mode), _pin(pin), _getExternalADCValue(getExternalADCValue)
 {
-  _getExternalADCValue(getExternalADCValue),
-  _pin(pin),
-  _mode(mode),
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -94,10 +92,10 @@ void Respiration::setSampleRate(unsigned long rate) {
 
 //=============================================UPDATE=============================================//
 // Updates the signal
-void Respiration::update() {
+void Respiration::update(float signal) {
   // sample at sampling rate
   if (sampleMetro) {
-    sample();
+    sample(signal);
   }
 }
 

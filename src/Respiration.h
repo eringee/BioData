@@ -40,7 +40,7 @@ using namespace pq;
 
 class Respiration {
 
-enum struct Mode {
+enum Mode {
   PIN,
   EXTERNAL_ADC,
   SIGNAL
@@ -175,7 +175,7 @@ enum struct Mode {
   // Calls sample() at sampling rate
   void update(float signal = 0);
 
-  void sample();   // reads the signal and passes it to the signal processing functions
+  void sample(float signal = 0);   // reads the signal and passes it to the signal processing functions
   void peakOrTrough(float value); // base signal processing and peak detection
   void amplitude(float value); // amplitude data processing
   void rpm(); // respiration rate data processing
@@ -206,7 +206,6 @@ enum struct Mode {
 
 private: 
  int (*_getExternalADCValue)(void); // pointer to function that returns ADC value
- float (*_getMeasurement)(void); // pointer to function that returns measurement (ex : temperature)
 };
 
 #endif
