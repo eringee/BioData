@@ -94,7 +94,7 @@ void Heart::update(float signal) {
     unsigned long t = micros();
     if (t - prevSampleMicros >= microsBetweenSamples) {
         // Perform updates.
-        sample();
+        sample(signal);
         prevSampleMicros = t;
     }
 }
