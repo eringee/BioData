@@ -32,13 +32,7 @@
 
 //=============================================CONSTRUCTORS=============================================//
 // CONSTRUCTOR
-Respiration::Respiration(unsigned long rate) {
-  initialize(rate);
-  }
-
-
-//=================================================SET=============================================//
-void Respiration::initialize(unsigned long rate) :
+Respiration::Respiration(unsigned long rate) :
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow),
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
   normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
@@ -69,7 +63,13 @@ void Respiration::initialize(unsigned long rate) :
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
   _millisPassed(0)
- {
+  {
+  initialize(rate);
+  }
+
+
+//=================================================SET=============================================//
+void Respiration::initialize(unsigned long rate) {
   //set peak detector thresholds
   minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
   minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
