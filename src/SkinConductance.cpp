@@ -47,7 +47,7 @@ void SkinConductance::initialize(unsigned long rate) {
   gsrSensorLopassed = 0;
   gsrSensorChangeFiltered = 0;
 
-  prevSampleMicros = micros();
+  prevSampleMicros = getMicros();
   setSampleRate(rate);
 }
 
@@ -57,7 +57,7 @@ void SkinConductance::setSampleRate(unsigned long rate) {
 }
 
 void SkinConductance::update(float signal) {
-  unsigned long t = micros();
+  unsigned long t = getMicros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
     sample(signal);
@@ -91,5 +91,5 @@ void SkinConductance::sample(float signal) {
     gsrSensorLopFiltered = map(gsrSensorLop, 0, 1023, 0, 1000)*0.001;
 
     gsrSensorChange = constrain(gsrSensorChange, 0, 1);
-
 }
+

@@ -49,12 +49,12 @@ void Heart::initialize(unsigned long rate) {
     heartSensorBpmLopValueMinMax.reset();
 
     heartSensorSignal = heartSensorFiltered = heartSensorAmplitude = 0;
-    bpmChronoStart = millis();
+    bpmChronoStart = getMillis();
 
     bpm = 60;
     beat = false;
 
-    prevSampleMicros = micros();
+    prevSampleMicros = getMicros();
 
     setSampleRate(rate);
 }
@@ -90,8 +90,7 @@ void Heart::setSampleRate(unsigned long rate) {
 }
 
 void Heart::update(float signal) {
-    // unsigned long t = micros();
-    unsigned long t = micros();
+    unsigned long t = getMicros();
     if (t - prevSampleMicros >= microsBetweenSamples) {
         // Perform updates.
         sample(signal);
@@ -142,7 +141,7 @@ void Heart::sample(float signal) {
     beat = heartThresh.detect(heartSensorFiltered);
 
     if ( beat ) {
-        unsigned long ms = millis();
+        unsigned long ms = getMillis();
         float temporaryBpm = 60000. / (ms - bpmChronoStart);
         bpmChronoStart = ms;
         if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is within bounds
