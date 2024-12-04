@@ -47,7 +47,9 @@ void SkinConductance::initialize(unsigned long rate) {
   gsrSensorLopassed = 0;
   gsrSensorChangeFiltered = 0;
 
-  prevSampleMicros = getMicros();
+  timer.start();
+
+  prevSampleMicros = timer.getMicros();
   setSampleRate(rate);
 }
 
@@ -57,7 +59,7 @@ void SkinConductance::setSampleRate(unsigned long rate) {
 }
 
 void SkinConductance::update(float signal) {
-  unsigned long t = getMicros();
+  unsigned long t = timer.getMicros();
   if (t - prevSampleMicros >= microsBetweenSamples) {
     // Perform updates.
     sample(signal);

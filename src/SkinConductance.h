@@ -32,7 +32,7 @@
 #include "MinMax.h"
 #include "Lop.h"
 #include "Hip.h"
-#include "Timers.h"
+#include "Timing.h"
 
 
 #ifndef SKIN_CONDUCTANCE_H_
@@ -61,6 +61,8 @@ class SkinConductance {
 public:
   SkinConductance(unsigned long rate=50); // default SC samplerate is 50Hz
   virtual ~SkinConductance() {}
+
+  Timing timer;
 
   /// Initializes the sensor.
   void initialize(unsigned long rate);

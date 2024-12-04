@@ -23,12 +23,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <chrono>
+#ifndef TIMING_H
+#define TIMING_H
 
-#ifndef TIMERS_H_
-#define TIMERS_H_
+class Timing {
+private:
+    unsigned long start_time;
 
-unsigned long getMicros();
-unsigned long getMillis();
+    // Function to get the current time
+    unsigned long current_time();
 
-#endif
+public:
+    Timing();
+    void start();
+    unsigned long elapsedMicros();
+    bool hasElapsed(unsigned long duration);
+    unsigned long getMicros();
+    unsigned long getMillis();
+};
+
+#endif // TIMING_H

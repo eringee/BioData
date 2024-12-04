@@ -22,22 +22,43 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "Timing.h"
 
-#include "Timers.h"
+#if defined(ARDUINO)
+#include <Arduino.h>
+#else
+#include <iostream>
+#include <chrono>
+#endif
 
-// Replace micros() with this function
-unsigned long getMicros() {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
-    return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+Timing::Timing() : start_time(0) {}
+
+void Timing::start() {
+    start_time = current_time();
 }
 
-// Replace millis() with this function
-unsigned long getMillis() {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto duration = now.time_since_epoch();
-    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+unsigned long Timing::elapsedMicros() {
+    return current_time() - start_time;
 }
 
-//TODO : class for timers? error checking? namespace?
+bool Timing::hasElapsed(unsigned long duration) {
+    return elapsedMicros() >= duration;
+}
+
+unsigned long Timing::current_time() {
+#if defined(ARDUINO)
+    return micros();
+#else
+    auto now = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+#endif
+}
+
+unsigned long Timing::getMicros() {
+    return elapsedMicros();
+}
+
+unsigned long Timing::getMillis() {
+    return getMicros() / 1000;
+}
 

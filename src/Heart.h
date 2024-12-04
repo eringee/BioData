@@ -30,12 +30,10 @@
 #include "MinMax.h"
 #include "Threshold.h"
 #include "Lop.h"
-#include "Timers.h"
+#include "Timing.h"
 
 #ifndef HEART_H_
 #define HEART_H_
-
-using namespace std::chrono;
 
 class Heart {
     
@@ -79,6 +77,8 @@ class Heart {
 public:
     Heart(unsigned long rate=200); // default samplerate is 200Hz
     virtual ~Heart() {}
+
+    Timing timer;
     
     void setAmplitudeSmoothing(float smoothing);
     void setBpmSmoothing(float smoothing);
