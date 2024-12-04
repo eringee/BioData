@@ -38,38 +38,38 @@ Respiration::Respiration(unsigned long rate) {
 
 
 //=================================================SET=============================================//
-void Respiration::initialize(unsigned long rate) {
-  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow); 
-  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow);
-  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow);
-  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow);
-  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow);
-  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX);
-  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN);
-  smoother(smootherFactor);
-  amplitudeSmoother(amplitudeSmootherFactor);
-  amplitudeLevelSmoother(amplitudeLevelSmootherFactor);
-  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor);
-  rpmSmoother(rpmSmootherFactor);
-  rpmLevelSmoother(rpmLevelSmootherFactor);
-  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor);
-  minMaxScaler();
-  _signal(0);
-  _minMaxScaled(0.5);
-  _exhale(0);
-  _amplitude(-FLT_MIN);
-  _clampScaledAmplitude(0.5);
-  _amplitudeLevel(0.5);
-  _amplitudeRateOfChange(0);
-  _amplitudeCoefficientOfVariation(0);
-  _interval(0);
-  _rpm(12);
-  _clampScaledRpm(0.5);
-  _rpmLevel(0.5);
-  _rpmRateOfChange(0);
-  _rpmCoefficientOfVariation(0);
-  _millisPassed(0);
-
+void Respiration::initialize(unsigned long rate) :
+  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow),
+  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
+  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
+  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow),
+  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow),
+  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX),
+  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN),
+  smoother(smootherFactor),
+  amplitudeSmoother(amplitudeSmootherFactor),
+  amplitudeLevelSmoother(amplitudeLevelSmootherFactor),
+  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor),
+  rpmSmoother(rpmSmootherFactor),
+  rpmLevelSmoother(rpmLevelSmootherFactor),
+  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
+  minMaxScaler(),
+  _signal(0),
+  _minMaxScaled(0.5),
+  _exhale(0),
+  _amplitude(-FLT_MIN),
+  _clampScaledAmplitude(0.5),
+  _amplitudeLevel(0.5),
+  _amplitudeRateOfChange(0),
+  _amplitudeCoefficientOfVariation(0),
+  _interval(0),
+  _rpm(12),
+  _clampScaledRpm(0.5),
+  _rpmLevel(0.5),
+  _rpmRateOfChange(0),
+  _rpmCoefficientOfVariation(0),
+  _millisPassed(0)
+ {
   //set peak detector thresholds
   minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);
   minMaxScaledPeak.fallbackTolerance(minMaxScaledPeakFallbackThreshold);
