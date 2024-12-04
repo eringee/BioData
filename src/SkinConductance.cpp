@@ -38,7 +38,7 @@ SkinConductance::SkinConductance(unsigned long rate)
   initialize(rate);
 }
 
-void SkinConductance::reset() {
+void SkinConductance::initialize(unsigned long rate) {
   gsrSensorSignal = 0;
 
   gsrSensorFiltered = 0;
@@ -74,7 +74,7 @@ float SkinConductance::getSCL() const {
 }
 
 int SkinConductance::getRaw() const {
-  return gsrSensorReading;
+  return gsrSensorSignal;
 }
 
 void SkinConductance::sample(float signal) {

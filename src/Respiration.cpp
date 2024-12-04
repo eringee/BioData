@@ -68,7 +68,7 @@ void Respiration::initialize(unsigned long rate) {
   _rpmLevel(0.5);
   _rpmRateOfChange(0);
   _rpmCoefficientOfVariation(0);
-  _millisPassed(0)
+  _millisPassed(0);
 
   //set peak detector thresholds
   minMaxScaledPeak.reloadThreshold(minMaxScaledPeakReloadThreshold);

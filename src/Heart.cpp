@@ -34,15 +34,14 @@ Heart::Heart(unsigned long rate){
 } 
 
 //=================================================SET=============================================//
-void Heart::initialize(unsigned long rate){
-
-    heartThresh(0.25, 0.4);              // if signal does not fall below (low, high) bounds than signal is ignored
-    heartMinMaxSmoothing(0.1);
-    heartSensorAmplitudeLop(0.001);
-    heartSensorBpmLop(0.001);
-    heartSensorAmplitudeLopValueMinMaxSmoothing(0.001);
-    heartSensorBpmLopValueMinMaxSmoothing(0.001);
-
+void Heart::initialize(unsigned long rate) :
+    heartThresh(0.25, 0.4),              // if signal does not fall below (low, high) bounds than signal is ignored
+    heartMinMaxSmoothing(0.1),
+    heartSensorAmplitudeLop(0.001),
+    heartSensorBpmLop(0.001),
+    heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
+    heartSensorBpmLopValueMinMaxSmoothing(0.001)
+{
     heartMinMax.reset();
     heartSensorAmplitudeLop.reset();
     heartSensorBpmLop.reset();
