@@ -27,17 +27,37 @@
  */
 #include "Heart.h"
 
-Heart::Heart(uint8_t pin, unsigned long rate) :
-_pin(pin),
-heartThresh(0.25, 0.4),              // if signal does not fall below (low, high) bounds than signal is ignored
-heartMinMaxSmoothing(0.1),
-heartSensorAmplitudeLop(0.001),
-heartSensorBpmLop(0.001),
-heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
-heartSensorBpmLopValueMinMaxSmoothing(0.001)
-{
+//=============================================CONSTRUCTORS=============================================//
+// CONSTRUCTOR
+Heart::Heart(unsigned long rate){
+    initialize(rate);
+} 
+
+//=================================================SET=============================================//
+void Heart::initialize(unsigned long rate){
+
+    heartThresh(0.25, 0.4);              // if signal does not fall below (low, high) bounds than signal is ignored
+    heartMinMaxSmoothing(0.1);
+    heartSensorAmplitudeLop(0.001);
+    heartSensorBpmLop(0.001);
+    heartSensorAmplitudeLopValueMinMaxSmoothing(0.001);
+    heartSensorBpmLopValueMinMaxSmoothing(0.001);
+
+    heartMinMax.reset();
+    heartSensorAmplitudeLop.reset();
+    heartSensorBpmLop.reset();
+    heartSensorAmplitudeLopValueMinMax.reset();
+    heartSensorBpmLopValueMinMax.reset();
+
+    heartSensorSignal = heartSensorFiltered = heartSensorAmplitude = 0;
+    bpmChronoStart = millis();
+
+    bpm = 60;
+    beat = false;
+
+    prevSampleMicros = micros();
+
     setSampleRate(rate);
-    reset();
 }
 
 void Heart::setAmplitudeSmoothing(float smoothing)
@@ -65,31 +85,13 @@ void Heart::setMinMaxSmoothing(float smoothing)
     heartMinMaxSmoothing = constrain(smoothing, 0, 1);
 }
 
-void Heart::reset() {
-    heartMinMax.reset();
-    heartSensorAmplitudeLop.reset();
-    heartSensorBpmLop.reset();
-    heartSensorAmplitudeLopValueMinMax.reset();
-    heartSensorBpmLopValueMinMax.reset();
-
-    heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
-    bpmChronoStart = millis();
-
-    bpm = 60;
-    beat = false;
-
-    prevSampleMicros = micros();
-
-    // Perform one update.
-    sample();
-}
-
 void Heart::setSampleRate(unsigned long rate) {
-    sampleRate = rate;
-    microsBetweenSamples = 1000000UL / sampleRate;
+    _sampleRate = rate;
+    microsBetweenSamples = 1000000UL / _sampleRate;
 }
 
-void Heart::update() {
+void Heart::update(float signal) {
+    // unsigned long t = micros();
     unsigned long t = micros();
     if (t - prevSampleMicros >= microsBetweenSamples) {
         // Perform updates.
@@ -119,15 +121,14 @@ float Heart::getBPM() const {
 }
 
 int Heart::getRaw() const {
-    return heartSensorReading;
+    return heartSensorSignal;
 }
 
-void Heart::sample() {
+void Heart::sample(float signal) {
     // Read analog value if needed.
-    heartSensorReading = analogRead(_pin);  //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-    heartSensorReading = analogRead(_pin);
+    heartSensorSignal = signal;
 
-    heartSensorFiltered = heartMinMax.filter(heartSensorReading);
+    heartSensorFiltered = heartMinMax.filter(heartSensorSignal);
     heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
     heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 

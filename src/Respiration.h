@@ -124,6 +124,9 @@ class Respiration {
         MinMaxScaler minMaxScaler;
     
     //-----VARIABLES-----//
+        // Sampling rate
+        unsigned long _sampleRate;
+
         // Raw signal
         int _signal;
         float _minMaxScaled;
@@ -151,8 +154,8 @@ class Respiration {
         int _millisPassed = 0;
 
 //===========METHODS===========//
-  // Sets certain Plaquette object parameters
-  void reset();
+  // Initializes Plaquette objects and variables
+  void initialize(unsigned long rate);
 
   // Sets sample rate.
   void setSampleRate(unsigned long rate);
