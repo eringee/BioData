@@ -71,7 +71,7 @@ class Respiration {
         float normalizerTimeWindow = 5;
 
         // Base temperature signal smoothing factor
-        float smootherFactor = 0.5;
+        float smootherFactor = 0.2;
 
     //-----PEAK DETECTION-----//
         // Thresholds for peak detection 

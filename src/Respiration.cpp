@@ -168,8 +168,8 @@ void Respiration::peakOrTrough(float value){
 // Amplitude data processing
 void Respiration::amplitude(float value){ 
    // declare and initialize local variables
-  static float min = -273; // base signal value at lowest point in breath cycle
-  static float max = -273; // base signal value at highest point in breath cycle
+  static float min = 0; // base signal value at lowest point in breath cycle
+  static float max = 0; // base signal value at highest point in breath cycle
   static float amplitudes[numberOfCycles] = {}; // array of previous breath amplitudes
   static int amplitudeIndex = 0; // index 
   static float oldestAmplitude; // oldest breath amplitude in the array
@@ -180,11 +180,11 @@ void Respiration::amplitude(float value){
   if (value > max) max = value;
 
   if (minMaxScaledPeak){  // on every exhale peak
-    if(max > -273 && min > -273){ // if min and max temperatures are valid
+    if(max > 0 && min > 0){ // if min and max temperatures are valid
       _amplitude = abs(max - min);  // calculate amplitude
     }
-    min = 273; // reset min to very high temperature
-    max = -273; // reset max to very low temperature
+    min = 65535; // reset min to very high value
+    max = 0; // reset max to very low value
   }
 
   if(_amplitude >0){ // if amplitude is valid 
