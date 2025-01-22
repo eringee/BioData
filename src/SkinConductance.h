@@ -65,10 +65,10 @@ public:
   Timing timer;
 
   /// Initializes the sensor.
-  void initialize(unsigned long rate);
+  void initialize(unsigned long rate=50);
 
   /// Sets sample rate.
-  void setSampleRate(unsigned long rate);
+  void setSampleRate(unsigned long rate=50);
 
   /**
    * Reads the signal and perform filtering operations. Call this before

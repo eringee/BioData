@@ -155,10 +155,10 @@ class Respiration {
 
 //===========METHODS===========//
   // Initializes Plaquette objects and variables
-  void initialize(unsigned long rate);
+  void initialize(unsigned long rate=50);
 
   // Sets sample rate.
-  void setSampleRate(unsigned long rate);
+  void setSampleRate(unsigned long rate=50);
 
   // Calls sample() at sampling rate
   void update(float signal = 0);

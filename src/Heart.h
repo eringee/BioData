@@ -87,10 +87,10 @@ public:
     void setMinMaxSmoothing(float smoothing);
     
     /// Initializes.
-    void initialize(unsigned long rate);
+    void initialize(unsigned long rate=200);
     
     /// Sets sample rate.
-    void setSampleRate(unsigned long rate);
+    void setSampleRate(unsigned long rate=200);
     
     /**
      * Reads the signal and perform filtering operations. Call this before
