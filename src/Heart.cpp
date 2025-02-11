@@ -60,6 +60,7 @@ void Heart::initialize(unsigned long rate) {
     setSampleRate(rate);
 }
 
+
 void Heart::setAmplitudeSmoothing(float smoothing)
 {
     heartSensorAmplitudeLop.setSmoothing(smoothing);
@@ -72,17 +73,17 @@ void Heart::setBpmSmoothing(float smoothing)
 
 void Heart::setAmplitudeMinMaxSmoothing(float smoothing)
 {
-    heartSensorAmplitudeLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorAmplitudeLopValueMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setBpmMinMaxSmoothing(float smoothing)
 {
-    heartSensorBpmLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorBpmLopValueMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setMinMaxSmoothing(float smoothing)
 {
-    heartMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setSampleRate(unsigned long rate) {

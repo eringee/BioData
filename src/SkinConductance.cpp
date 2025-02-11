@@ -29,7 +29,6 @@
  */
 #include "SkinConductance.h"
 
-
 float alpha_1 = 0.01;
 float alpha_2 = 0.005;
 
@@ -82,16 +81,17 @@ int SkinConductance::getRaw() const {
 void SkinConductance::sample(float signal) {
     // Read sensor value and invert it.
     // TODO : How do we do this if the signal comes from a 16-bit ADC or a measurement? Normalize or scale before inverting?
+    gsrSensorSignal = signal; 
+    float gsrSensorInverted = 1023 - signal; 
     
-    gsrSensorSignal = 1023 - signal; 
-
-    gsrSensorLop = alpha_1*gsrSensorSignal + (1 - alpha_1)*gsrSensorLop;
+    gsrSensorLop = alpha_1*gsrSensorInverted + (1 - alpha_1)*gsrSensorLop;
     gsrSensorLopassed = alpha_2*gsrSensorLop + (1 - alpha_2)*gsrSensorLopassed;
 
     gsrSensorChange = ((gsrSensorLop - gsrSensorLopassed)/10)+0.2;
 
-    gsrSensorLopFiltered = map(gsrSensorLop, 0, 1023, 0, 1000)*0.001;
+    gsrSensorLopFiltered = mapper(gsrSensorLop, 1023, 0, 0, 1000)*0.001;
 
-    gsrSensorChange = constrain(gsrSensorChange, 0, 1);
+    gsrSensorChange = clamp(gsrSensorChange, 0, 1);
+    // TODO : is the raw signal we want to give out inverted or not? option to get raw input and inverted signal??
 }
 

@@ -31,6 +31,7 @@
 #include "Threshold.h"
 #include "Lop.h"
 #include "Timing.h"
+#include "utils.h"
 
 #ifndef HEART_H_
 #define HEART_H_

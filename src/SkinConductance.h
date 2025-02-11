@@ -26,13 +26,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <Arduino.h>
 
 #include "Average.h"
 #include "MinMax.h"
 #include "Lop.h"
 #include "Hip.h"
 #include "Timing.h"
+#include "utils.h"
 
 
 #ifndef SKIN_CONDUCTANCE_H_
@@ -65,10 +65,10 @@ public:
   Timing timer;
 
   /// Initializes the sensor.
-  void initialize(unsigned long rate=50);
+  void initialize(unsigned long rate);
 
   /// Sets sample rate.
-  void setSampleRate(unsigned long rate=50);
+  void setSampleRate(unsigned long rate);
 
   /**
    * Reads the signal and perform filtering operations. Call this before
