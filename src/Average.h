@@ -39,6 +39,7 @@
 #endif
 
 #include <math.h>
+#include <stdint.h>
 
 inline static float sqr(float x) {
     return x*x;
