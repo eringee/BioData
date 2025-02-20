@@ -49,6 +49,7 @@ Respiration::Respiration(unsigned long rate) :
   rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
   minMaxScaler(),
   _signal(0),
+  _filteredSignal(0),
   _minMaxScaled(0.5),
   _exhale(0),
   _amplitude(-FLT_MIN),
@@ -110,19 +111,26 @@ void Respiration::sample(float signal) {
 void Respiration::peakOrTrough(float value){
  value >> smoother >> normalizer; // smooth and normalize temperature signal
 
+  _filteredSignal = respMinMax.filter(value);
+  respMinMax.adapt(0.05); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
+
   // PEAK DETECTION AND MIN MAX SCALED SIGNAL
-  _minMaxScaled = normalizer >> minMaxScaler; // scale to 0-1
-  minMaxScaler >> minMaxScaledPeak; // peak detection
-  minMaxScaler>> minMaxScaledTrough; // trough detection 
-  _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
+  // _minMaxScaled = normalizer >> minMaxScaler; // scale to 0-1
+  // minMaxScaler >> minMaxScaledPeak; // peak detection
+  // minMaxScaler>> minMaxScaledTrough; // trough detection 
+
+  _filteredSignal >> minMaxScaledPeak;
+  _filteredSignal >> minMaxScaledTrough;
+  // _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
+  _exhale =  _filteredSignal >= 0.5 ? 1 : 0;
   // store true if exhaling (when trough is detected ; temperature is rising again)
 }
 
 // Amplitude data processing
 void Respiration::amplitude(float value){ 
    // declare and initialize local variables
-  static float min = -273; // base signal value at lowest point in breath cycle
-  static float max = -273; // base signal value at highest point in breath cycle
+  static float min = -FLT_MIN; // base signal value at lowest point in breath cycle
+  static float max = -FLT_MIN; // base signal value at highest point in breath cycle
   static float amplitudes[numberOfCycles] = {}; // array of previous breath amplitudes
   static int amplitudeIndex = 0; // index 
   static float oldestAmplitude; // oldest breath amplitude in the array
@@ -133,11 +141,11 @@ void Respiration::amplitude(float value){
   if (value > max) max = value;
 
   if (minMaxScaledPeak){  // on every exhale peak
-    if(max > -273 && min > -273){ // if min and max temperatures are valid
+    if(max > -FLT_MIN && min > -FLT_MIN && min < FLT_MAX){ // if min and max temperatures are valid
       _amplitude = abs(max - min);  // calculate amplitude
     }
-    min = 273; // reset min to very high temperature
-    max = -273; // reset max to very low temperature
+    min = FLT_MAX; // reset min to very high temperature
+    max = -FLT_MIN; // reset max to very low temperature
   }
 
   if(_amplitude >0){ // if amplitude is valid 
@@ -239,7 +247,7 @@ float Respiration::getNormalized() const {
 
 //Returns scaled signal (float between 0 and 1) : scaled by minMaxScaler
 float Respiration::getScaled() const { 
-  return _minMaxScaled;
+  return _filteredSignal;
 }
 
 //Returns true if user is exhaling 

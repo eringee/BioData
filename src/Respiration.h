@@ -30,6 +30,10 @@
 #include <Arduino.h>
 #include <Wire.h>  
 #include <numeric>
+#include "Average.h"
+#include "MinMax.h"
+#include "Threshold.h"
+#include "Lop.h"
 
 #include "PlaquetteLib.h" //https://sofapirate.github.io/Plaquette/index.html
 
@@ -122,6 +126,7 @@ class Respiration {
 
         // MinMax Scaler
         MinMaxScaler minMaxScaler;
+        MinMax respMinMax;
     
     //-----VARIABLES-----//
         // Sampling rate
@@ -130,6 +135,7 @@ class Respiration {
         // Raw signal
         int _signal;
         float _minMaxScaled;
+        float _filteredSignal;
 
         // exhale (exhale = temperature peak)
         bool _exhale;
