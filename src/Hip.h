@@ -23,6 +23,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ #ifndef HIP_H_
+ #define HIP_H_
+
 class Hip {
   float value;
   float previousInput;
@@ -39,4 +42,4 @@ class Hip {
     return value;
   }
 };
-
+#endif
