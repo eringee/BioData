@@ -92,6 +92,7 @@ void Heart::setSampleRate(unsigned long rate) {
 }
 
 void Heart::update(float signal) {
+    heartSensorSignal = signal;
     unsigned long t = timer.getMicros();
     if (t - prevSampleMicros >= microsBetweenSamples) {
         // Perform updates.
