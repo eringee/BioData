@@ -110,7 +110,7 @@ public:
     float getBPM() const;
     
     /// Returns raw signal as returned by analogRead().
-    int getRaw() const;
+    int32_t getRaw() const;
     
     ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
     /* For example, if amplitude is average, returns 0.5,

@@ -121,7 +121,7 @@ float Heart::getBPM() const {
     return bpm;
 }
 
-int Heart::getRaw() const {
+int32_t Heart::getRaw() const {
     return heartSensorSignal;
 }
 

@@ -236,7 +236,7 @@ if (_interval > 0){ // if interval is valid
 
 //==============================================GET=================================================//
 // Returns raw signal value
-unsigned long Respiration::getRaw()  const {
+int32_t Respiration::getRaw()  const {
 return _signal ;
 }
 
@@ -256,7 +256,7 @@ bool Respiration::isExhaling() const{
 }
 
 //Returns raw breah amplitude (signal value)
-unsigned long Respiration::getRawAmplitude() const{ 
+int32_t Respiration::getRawAmplitude() const{ 
   if(_amplitude>=0){
       return _amplitude;
     } else {
@@ -291,7 +291,7 @@ float Respiration::getAmplitudeVariability() const {
 }
 
 //Returns respiration interval (milliseconds between breath cycles)
-unsigned long Respiration::getInterval() const { 
+int64_t Respiration::getInterval() const { 
   return _interval;
 }
 

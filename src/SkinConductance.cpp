@@ -74,7 +74,7 @@ float SkinConductance::getSCL() const {
     return gsrSensorLopFiltered;
 }
 
-int SkinConductance::getRaw() const {
+int32_t SkinConductance::getRaw() const {
   return gsrSensorSignal;
 }
 

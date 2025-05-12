@@ -175,13 +175,13 @@ class Respiration {
   void rpm(); // respiration rate data processing
 
   // Returns raw signal.
-  unsigned long getRaw() const;
+  int32_t getRaw() const;
 
   float getNormalized() const; //returns normalized initial signal
   float getScaled() const; //returns min-max scaled initial signal
   bool isExhaling() const; //returns true if user is exhaling 
 
-  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum value in latest breath cycle)
+  int32_t getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum value in latest breath cycle)
   float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
   float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
   float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 
@@ -189,7 +189,7 @@ class Respiration {
   float getAmplitudeChange() const; //returns breath amplitude rate of change
   float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
 
-  unsigned long getInterval() const; //returns interbreath interval in milliseconds
+  int64_t getInterval() const; //returns interbreath interval in milliseconds
   float getRpm() const; //returns respiration rate (respirations per minute)
   float getNormalizedRpm() const; //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
   float getScaledRpm() const; //returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
