@@ -172,9 +172,11 @@ void Respiration::amplitude(float value){
     
     //AMPLITUDE VARIABILITY
     _amplitude >> normalizerForAmplitudeVariability; // pipe amplitude into a normalizer to access standard deviation and mean stats
-    if(oldestAmplitude>0){ // if oldest amplitude is valid
+    if(oldestAmplitude>0 && normalizerForAmplitudeVariability.mean() > 0 && normalizerForAmplitudeVariability.stdDev() > 0){ // if oldest amplitude is valid
     _amplitudeCoefficientOfVariation = (normalizerForAmplitudeVariability.stdDev() / normalizerForAmplitudeVariability.mean())*100;
     // calculate coefficient of variation
+ } else {
+    _amplitudeCoefficientOfVariation = 0;
  }
 }
   // //AMPLITUDE Level
@@ -224,9 +226,11 @@ if (_interval > 0){ // if interval is valid
 
   //RPM VARIABILITY
   _rpm >> normalizerForRpmVariability; // pipe rpm into a normalizer to access standard deviation and mean stats
-  if (oldestInterval >0){ // if oldest interval is valid
+  if (oldestInterval >0 && normalizerForRpmVariability.mean() > 0 && normalizerForRpmVariability.stdDev() > 0){ // if oldest interval is valid
   _rpmCoefficientOfVariation = (normalizerForRpmVariability.stdDev() / normalizerForRpmVariability.mean())*100;
   // calculate coefficient of variation
+  } else {
+    _rpmCoefficientOfVariation = 0;
   }
 }
   //RPM Level
