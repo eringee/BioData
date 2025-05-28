@@ -121,8 +121,8 @@ void Respiration::peakOrTrough(float value){
 
   _filteredSignal >> minMaxScaledPeak;
   _filteredSignal >> minMaxScaledTrough;
-  // _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
-  _exhale =  _filteredSignal >= 0.5 ? 1 : 0;
+  _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
+  // _exhale =  _filteredSignal >= 0.5 ? 1 : 0;
   // store true if exhaling (when trough is detected ; temperature is rising again)
 }
 
