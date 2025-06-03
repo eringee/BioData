@@ -45,18 +45,15 @@ void loop() {
 
 Refer to the [assembly listing](ASSEMBLY-biodatatrio3.0.pdf) for the parts.
 
-Schematics:
-![BioSynth Schematics](extra/GEE-BioSynthv3-schematics2018.jpg)
-
-
 # Credits
 
-Main Developer: [Erin Gee](http://www.eringee.net)
+Main Developer: [Erin Gee](https://www.eringee.net)
 
 Contributors:
 * [Martin Peach](https://puredata.info/Members/martinrp/OSCobjects)
 * [Thomas Ouellet Fredericks](https://github.com/thomasfredericks)
 * [Sofian Audry](https://github.com/sofian)
+* [Luana Belinsky](https://github.com/possibly-human)
 
 # Copyright
 
