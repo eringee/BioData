@@ -26,12 +26,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Average.h"
+#include "Lop.h"
 #include "MinMax.h"
 #include "Threshold.h"
-#include "Lop.h"
 #include "Timing.h"
-#include "utils.h"
+
+#include <cstdint>
 
 #ifndef HEART_H_
 #define HEART_H_
