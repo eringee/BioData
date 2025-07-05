@@ -32,103 +32,112 @@
 #include "Timing.h"
 
 #include <cstdint>
+#include <optional>
 
 #ifndef HEART_H_
 #define HEART_H_
 
-class Heart {
-    
-    unsigned long bpmChronoStart;
-    
-    MinMax heartMinMax;
-    Threshold heartThresh;
-    float heartMinMaxSmoothing;
-    
-    Lop heartSensorAmplitudeLop;
-    Lop heartSensorBpmLop;
-    
-    float heartSensorAmplitudeLopValue;
-    
-    float heartSensorBpmLopValue;
-    MinMax heartSensorAmplitudeLopValueMinMax;
-    float heartSensorAmplitudeLopValueMinMaxSmoothing;
-    
-    float heartSensorAmplitudeLopValueMinMaxValue;
-    MinMax heartSensorBpmLopValueMinMax;
-    float heartSensorBpmLopValueMinMaxSmoothing;
-    
-    float heartSensorBpmLopValueMinMaxValue;
-    
-    float heartSensorFiltered;
-    float heartSensorAmplitude;
-    
-    float heartSensorSignal;
-    
-    float bpm;  // this value is fed to initialize your BPM before a heartbeat is detected
-    
-    bool beat;
-    
-    // Sample rate in Hz.
-    unsigned long _sampleRate;
-    
-    // Internal use.
-    unsigned long microsBetweenSamples;
-    unsigned long prevSampleMicros;
-    
-public:
-    Heart(unsigned long rate=200); // default samplerate is 200Hz
-    virtual ~Heart() {}
+class Heart final
+{
 
-    Timing timer;
-    
-    void setAmplitudeSmoothing(float smoothing);
-    void setBpmSmoothing(float smoothing);
-    void setAmplitudeMinMaxSmoothing(float smoothing);
-    void setBpmMinMaxSmoothing(float smoothing);
-    void setMinMaxSmoothing(float smoothing);
-    
-    /// Initializes.
-    void initialize(unsigned long rate=200);
-    
-    /// Sets sample rate.
-    void setSampleRate(unsigned long rate=200);
-    
-    /**
-     * Reads the signal and perform filtering operations. Call this before
-     * calling any of the access functions. This function takes into account
-     * the sample rate.
+  unsigned long bpmChronoStart{};
+
+  MinMax heartMinMax{};
+  Threshold heartThresh;
+  float heartMinMaxSmoothing{};
+
+  Lop heartSensorAmplitudeLop{};
+  Lop heartSensorBpmLop{};
+
+  float heartSensorAmplitudeLopValue{};
+
+  float heartSensorBpmLopValue{};
+  MinMax heartSensorAmplitudeLopValueMinMax{};
+  float heartSensorAmplitudeLopValueMinMaxSmoothing{};
+
+  float heartSensorAmplitudeLopValueMinMaxValue{};
+  MinMax heartSensorBpmLopValueMinMax{};
+  float heartSensorBpmLopValueMinMaxSmoothing{};
+
+  float heartSensorBpmLopValueMinMaxValue{};
+
+  float heartSensorFiltered{};
+  float heartSensorAmplitude{};
+
+  float heartSensorSignal{};
+
+  float bpm{}; // this value is fed to initialize your BPM before a heartbeat is detected
+
+  bool beat{};
+
+  // Sample rate in Hz.
+  unsigned long _sampleRate{};
+
+  // Internal use.
+  unsigned long microsBetweenSamples{};
+  unsigned long prevSampleMicros{};
+
+public:
+  explicit Heart(unsigned long rate = 200); // default samplerate is 200Hz
+
+  Timing timer;
+
+  void setAmplitudeSmoothing(float smoothing);
+  void setBpmSmoothing(float smoothing);
+  void setAmplitudeMinMaxSmoothing(float smoothing);
+  void setBpmMinMaxSmoothing(float smoothing);
+  void setMinMaxSmoothing(float smoothing);
+
+  /// Initializes.
+  void initialize(
+      unsigned long rate = 200,
+      std::optional<unsigned long> initialMicros = std::nullopt);
+
+  /// Sets sample rate.
+  void setSampleRate(unsigned long rate = 200);
+
+  /// Reads the signal and perform filtering operations.
+  /*
+     * Call this before calling any of the access functions. 
+     * This function takes into account the sample rate.
      */
-    void update(float signal = 0);
-    
-    /// Get normalized heartrate signal.
-    float getNormalized() const;
-    
-    /// Returns true if a beat was detected during the last call to update().
-    bool beatDetected() const;
-    
-    /// Returns BPM (beats per minute).
-    float getBPM() const;
-    
-    /// Returns raw signal as returned by analogRead().
-    int32_t getRaw() const;
-    
-    ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
-    /* For example, if amplitude is average, returns 0.5,
+  void update(float signal, unsigned long elapsedMicros);
+
+  /// Uses internal timer, only useful on actual hardware devices
+  void update(float signal = 0);
+
+  /// Get normalized heartrate signal.
+  float getNormalized() const;
+
+  /// Returns true if a beat was detected during the last call to update().
+  bool beatDetected() const;
+
+  /// Returns BPM (beats per minute).
+  float getBPM() const;
+
+  /// Returns raw signal as returned by analogRead().
+  int32_t getRaw() const;
+
+  ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
+  /* For example, if amplitude is average, returns 0.5,
      * if amplitude is below average, returns < 0.5
      * if amplitude is above average, returns > 0.5.
      */
-    float amplitudeChange() const;
-    
-    /// Returns the average bpm of signal mapped between 0.0 and 1.0.
-    /* For example, if bpm is average, returns 0.5,
+  float amplitudeChange() const;
+
+  /// Returns the average bpm of signal mapped between 0.0 and 1.0.
+  /* For example, if bpm is average, returns 0.5,
      * if bpm is below average, returns < 0.5
      * if bpm is above average, returns > 0.5.
      */
-    float bpmChange() const;
-    
-    // Performs the actual adjustments of signals and filterings.
-    // Internal use: don't use directly, use update() instead.
-    void sample(float signal = 0);
+  float bpmChange() const;
+
+  // Performs the actual adjustments of signals and filterings.
+  // Internal use: don't use directly, use update() instead.
+  void sample(float signal, unsigned long elapsedMicros);
+  void sample(float signal = 0); // Deprecated - for backward compatibility
+  void processSample(float signal);
+  void processBpm(float elapsedMillis);
 };
 
 #endif
