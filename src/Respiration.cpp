@@ -111,7 +111,7 @@ void Respiration::sample(float signal) {
 void Respiration::peakOrTrough(float value){
  value >> smoother >> normalizer; // smooth and normalize temperature signal
 
-  _filteredSignal = respMinMax.filter(value);
+  _filteredSignal = respMinMax.filter(smoother);
   respMinMax.adapt(0.05); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 
   // PEAK DETECTION AND MIN MAX SCALED SIGNAL
