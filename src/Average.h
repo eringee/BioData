@@ -40,6 +40,7 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 inline static float sqr(float x) {
     return x*x;
