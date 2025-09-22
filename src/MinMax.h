@@ -24,10 +24,11 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ******************************************************/
-#include <Arduino.h>
 
 #ifndef MIN_MAX_H_
 #define MIN_MAX_H_
+
+#include "utils.h"
 
 class MinMax {
     float input;
@@ -47,7 +48,7 @@ class MinMax {
     }
 
     void adapt(float lop) {
-      lop = constrain(lop, 0, 1);
+      lop = clamp(lop, 0, 1);
       lop = lop * lop;
 
       min += (input - min) * lop;

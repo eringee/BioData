@@ -29,19 +29,18 @@
  */
 #include "SkinConductance.h"
 
-
 float alpha_1 = 0.01;
 float alpha_2 = 0.005;
 
-SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
-  _pin(pin)
+SkinConductance::SkinConductance(unsigned long rate)
 {
-  setSampleRate(rate);
-  reset();
+  initialize(rate);
 }
 
-void SkinConductance::reset() {
-  gsrSensorReading = 0;
+void SkinConductance::initialize(
+    unsigned long rate, std::optional<unsigned long> initialMicros)
+{
+  gsrSensorSignal = 0;
 
   gsrSensorFiltered = 0;
   gsrSensorLopFiltered = 0;
@@ -49,24 +48,27 @@ void SkinConductance::reset() {
   gsrSensorLopassed = 0;
   gsrSensorChangeFiltered = 0;
 
-  prevSampleMicros = micros();
+  timer.start();
 
-  // Perform one update.
-  sample();
+  prevSampleMicros = initialMicros ? *initialMicros : timer.getMicros();
+  setSampleRate(rate);
 }
 
 void SkinConductance::setSampleRate(unsigned long rate) {
-  sampleRate = rate;
-  microsBetweenSamples = 1000000UL / sampleRate;
+  _sampleRate = rate;
+  microsBetweenSamples = 1000000UL / _sampleRate;
 }
 
-void SkinConductance::update() {
-  unsigned long t = micros();
-  if (t - prevSampleMicros >= microsBetweenSamples) {
-    // Perform updates.
-    sample();
-    prevSampleMicros = t;
+void SkinConductance::update(float signal, unsigned long elapsedMicros) {
+  if(elapsedMicros - prevSampleMicros >= microsBetweenSamples)
+  {
+    sample(signal);
+    prevSampleMicros = elapsedMicros;
   }
+}
+
+void SkinConductance::update(float signal) {
+  update(signal, timer.getMicros());
 }
 
 float SkinConductance::getSCR() const {
@@ -77,23 +79,24 @@ float SkinConductance::getSCL() const {
     return gsrSensorLopFiltered;
 }
 
-int SkinConductance::getRaw() const {
-  return gsrSensorReading;
+int32_t SkinConductance::getRaw() const {
+  return gsrSensorSignal;
 }
 
-void SkinConductance::sample() {
+void SkinConductance::sample(float signal) {
     // Read sensor value and invert it.
-    gsrSensorReading = 1023 - analogRead(_pin); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-    gsrSensorReading = 1023 - analogRead(_pin);
-    // Smooth out the signals that you compare to one another and map between 0 and 1000
-
-    gsrSensorLop = alpha_1*gsrSensorReading + (1 - alpha_1)*gsrSensorLop;
+    // TODO : How do we do this if the signal comes from a 16-bit ADC or a measurement? Normalize or scale before inverting?
+    gsrSensorSignal = signal; 
+    float gsrSensorInverted = 1023 - signal; 
+    
+    gsrSensorLop = alpha_1*gsrSensorInverted + (1 - alpha_1)*gsrSensorLop;
     gsrSensorLopassed = alpha_2*gsrSensorLop + (1 - alpha_2)*gsrSensorLopassed;
 
     gsrSensorChange = ((gsrSensorLop - gsrSensorLopassed)/10)+0.2;
 
-    gsrSensorLopFiltered = map(gsrSensorLop, 0, 1023, 0, 1000)*0.001;
+    gsrSensorLopFiltered = mapper(gsrSensorLop, 1023, 0, 0, 1000)*0.001;
 
-    gsrSensorChange = constrain(gsrSensorChange, 0, 1);
-
+    gsrSensorChange = clamp(gsrSensorChange, 0, 1);
+    // TODO : is the raw signal we want to give out inverted or not? option to get raw input and inverted signal??
 }
+

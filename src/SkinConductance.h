@@ -26,54 +26,56 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <Arduino.h>
 
 #include "Average.h"
-#include "MinMax.h"
-#include "Lop.h"
 #include "Hip.h"
+#include "Lop.h"
+#include "MinMax.h"
+#include "Timing.h"
+#include "utils.h"
 
-
+#include <optional>
 #ifndef SKIN_CONDUCTANCE_H_
 #define SKIN_CONDUCTANCE_H_
 
+class SkinConductance final
+{
+  int gsrSensorSignal{};
 
-class SkinConductance {
-
-  // Analog pin the SC sensor is connected to.
-  uint8_t _pin;
-  int gsrSensorReading;
-
-  float gsrSensorFiltered;
-  float gsrSensorLopFiltered;
-  float gsrSensorChange;
-  float gsrSensorChangeFiltered;
-  float gsrSensorAmplitude;
-  float gsrSensorLop;
-  float gsrSensorLopassed;
+  float gsrSensorFiltered{};
+  float gsrSensorLopFiltered{};
+  float gsrSensorChange{};
+  float gsrSensorChangeFiltered{};
+  float gsrSensorAmplitude{};
+  float gsrSensorLop{};
+  float gsrSensorLopassed{};
 
   // Sample rate in Hz.
-  unsigned long sampleRate;
+  unsigned long _sampleRate{};
 
   // Internal use.
-  unsigned long microsBetweenSamples;
-  unsigned long prevSampleMicros;
+  unsigned long microsBetweenSamples{};
+  unsigned long prevSampleMicros{};
 
 public:
-  SkinConductance(uint8_t pin, unsigned long rate=50); // default SC samplerate is 50Hz
-  virtual ~SkinConductance() {}
+  explicit SkinConductance(unsigned long rate = 50); // default SC samplerate is 50Hz
 
-  /// Resets all values.
-  void reset();
+  Timing timer;
+
+  /// Initializes the sensor.
+  void initialize(
+      unsigned long rate = 50,
+      std::optional<unsigned long> initialMicros = std::nullopt);
 
   /// Sets sample rate.
-  void setSampleRate(unsigned long rate);
+  void setSampleRate(unsigned long rate=50);
 
   /**
    * Reads the signal and perform filtering operations. Call this before
    * calling any of the access functions.
    */
-  void update();
+  void update(float signal, unsigned long elapsedMicros);
+  void update(float signal);
 
   /// Returns skin conductance response (SRC).
   float getSCR() const;
@@ -82,11 +84,11 @@ public:
   float getSCL() const;
 
   /// Returns raw signal as returned by analogRead() (inverted).
-  int getRaw() const;
+  int32_t getRaw() const;
 
   // Performs the actual adjustments of signals and filterings.
   // Internal use: don't use directly, use update() instead.
-  void sample();
+  void sample(float signal);
 };
 
 #endif

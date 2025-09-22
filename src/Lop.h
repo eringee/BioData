@@ -20,10 +20,11 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <Arduino.h>
 
 #ifndef LOP_H_
 #define LOP_H_
+
+#include "utils.h"
 
 class Lop {
 
@@ -56,7 +57,7 @@ public:
   /// Sets smoothing factor to value in [0, 1] (lower value = smoother).
   void setSmoothing(float alpha_) {
     // Constrains the smoothing factor in [0, 1].
-    alpha = constrain(alpha_, 0, 1);
+    alpha = clamp(alpha_, 0.0, 1.0);
 
     // Rule of thumb that maps the smoothing factor to number of samples.
     nCalibration = int(2 / alpha - 1);

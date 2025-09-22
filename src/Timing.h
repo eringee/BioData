@@ -1,13 +1,13 @@
-/******************************************************
-
- * This file is part of the BioData project
- * (c) 2018 Erin Gee   http://www.eringee.net
+/*
+ * Timers.h
  *
- * It's a high-pass filter.
+ * This file defines general timer functions that do not depend on Arduino framework
+ * 
+ * This file is part of the BioData project
+ * (c) 2018 Erin Gee
  *
  * Contributing authors:
- * (c) 2018 Erin Gee
- * (c) 2017 Thomas Ouellet Fredericks
+ * (c) 2024 Luana Belinsky
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,23 +23,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- #ifndef HIP_H_
- #define HIP_H_
+#ifndef TIMING_H
+#define TIMING_H
 
-class Hip {
-  float value;
-  float previousInput;
-  float hip;
+class Timing {
+private:
+    unsigned long start_time;
 
- public:
-  Hip(float hip ) {
-    this->hip = hip;
-    };
-    
-  float filter( float input) {
-    value =  hip * ( value + input - previousInput);
-    previousInput = input;
-    return value;
-  }
+    // Function to get the current time
+    unsigned long current_time();
+
+public:
+    Timing();
+    void start();
+    unsigned long elapsedMicros();
+    bool hasElapsed(unsigned long duration);
+    unsigned long getMicros();
+    unsigned long getMillis();
 };
-#endif
+
+#endif // TIMING_H

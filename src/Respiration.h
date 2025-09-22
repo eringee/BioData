@@ -9,6 +9,7 @@
  * (c) 2018 Erin Gee
  *
  * Contributing authors:
+ * (c) 2024 Luana Belinsky
  * (c) 2018 Erin Gee
  * (c) 2018 Sofian Audry
  * (c) 2017 Thomas Ouellet Fredericks
@@ -27,101 +28,175 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <Arduino.h>
-
+#include <Wire.h>  
+#include <numeric>
 #include "Average.h"
 #include "MinMax.h"
 #include "Threshold.h"
 #include "Lop.h"
+
+#include "PlaquetteLib.h" //https://sofapirate.github.io/Plaquette/index.html
+
+using namespace pq;
 
 #ifndef RESP_H_
 #define RESP_H_
 
 class Respiration {
 
-  // Analog pin the Respiration sensor is connected to.
-  uint8_t _pin;
+  public:   
+  //==============CONSTRUCTORS==============//
+  Respiration(unsigned long rate=50);   
+  // Constructor 
+  virtual ~Respiration() {};
 
-  unsigned long bpmChronoStart;
+  // Metro object for sample timing
+  Metro sampleMetro;
 
-  MinMax respMinMax;
-  Threshold respThresh;
+   //-----COMMON PARAMETERS-----//
+        // Normalizers have a target mean of 0 and standard deviation of 1
+        float normalizerMean = 0; 
+        float normalizerStdDev = 1;
 
-  Lop respSensorAmplitudeLop;
-  Lop respSensorBpmLop;
+        // When scaling normalized signal to 0-1, use these values as min and max to map
+        float fromMinStdDev = -1;
+        float fromMaxStdDev = 1;
 
-  float respSensorAmplitudeLopValue;
+    //-----TEMPERATURE SIGNAL-----//
+        // Base temperature signal normalizer time window
+        float normalizerTimeWindow = 5;
 
-  float respSensorBpmLopValue;
-  MinMax respSensorAmplitudeLopValueMinMax;
+        // Base temperature signal smoothing factor
+        float smootherFactor = 0.5;
 
-  float respSensorAmplitudeLopValueMinMaxValue;
-  MinMax respSensorBpmLopValueMinMax;
+    //-----PEAK DETECTION-----//
+        // Thresholds for peak detection 
+        float minMaxScaledPeakThreshold = 0.5;
+        float minMaxScaledTroughThreshold = 0.5;
+        float minMaxScaledPeakReloadThreshold = 0.45;
+        float minMaxScaledPeakFallbackThreshold = 0.1;
+        float minMaxScaledTroughReloadThreshold = 0.55;
+        float minMaxScaledTroughFallbackThreshold = 0.1;
 
-  float respSensorBpmLopValueMinMaxValue;
+    //-----AMPLITUDE-----//
+        // Amplitude normalizer time window
+        float amplitudeNormalizerTimeWindow = 90;
 
-  float respSensorFiltered;
-  float respSensorAmplitude;
+        // Normalizer for amplitude variability
+        float normalizerForAmplitudeVariabilityTimeWindow = 30;
 
-  float respSensorReading;
+        // Amplitude smoothing factors
+        float amplitudeSmootherFactor = 2;
+        float amplitudeLevelSmootherFactor = 5;
+        float amplitudeRateOfChangeSmootherFactor = 2;
 
-  float bpm;  // this value is fed to initialize your BPM before a breath is detected
+    //-----RPM-----//
+    // Respirations per minute
+        // Rpm normalizer time window
+        float rpmNormalizerTimeWindow = 90;
 
-  bool breath;// declares that we think a breath has occurred
+        // Normalizer for rpm variability
+        float normalizerForRpmVariabilityTimeWindow = 30;
 
+        // Rpm smoothing factors
+        float rpmSmootherFactor = 2;
+        float rpmLevelSmootherFactor = 10;
+        float rpmRateOfChangeSmootherFactor = 2;
 
-  // Sample rate in Hz.
-  unsigned long sampleRate;
+    //-----PLAQUETTE OBJECTS-----//
+        // Normalizers
+        Normalizer normalizer;
+        Normalizer amplitudeNormalizer;
+        Normalizer normalizerForAmplitudeVariability;
+        Normalizer rpmNormalizer;
+        Normalizer normalizerForRpmVariability;
 
-  // Internal use.
-  unsigned long microsBetweenSamples;
-  unsigned long prevSampleMicros;
+        // Peak detectors
+        PeakDetector minMaxScaledPeak;
+        PeakDetector minMaxScaledTrough;
+      
+        // Smoothers
+        Smoother smoother;
+        Smoother amplitudeSmoother;
+        Smoother amplitudeLevelSmoother;
+        Smoother amplitudeRateOfChangeSmoother;
+        Smoother rpmSmoother;
+        Smoother rpmLevelSmoother;
+        Smoother rpmRateOfChangeSmoother;
 
-public:
-  Respiration(uint8_t pin, unsigned long rate=50);   // default respiration samplerate is 50Hz
-  virtual ~Respiration() {}
+        // MinMax Scaler
+        MinMaxScaler minMaxScaler;
+        MinMax respMinMax;
+    
+    //-----VARIABLES-----//
+        // Sampling rate
+        unsigned long _sampleRate;
 
-  /// Resets all values.
-  void reset();
+        // Raw signal
+        int _signal;
+        float _minMaxScaled;
+        float _filteredSignal;
 
-  /// Sets sample rate.
-  void setSampleRate(unsigned long rate);
+        // exhale (exhale = temperature peak)
+        bool _exhale;
 
-  /**
-   * Reads the signal and perform filtering operations. Call this before
-   * calling any of the access functions. This function takes into account
-   * the sample rate.
-   */
-  void update();
+        // Amplitude
+        float _amplitude;
+        float _clampScaledAmplitude;
+        float _amplitudeLevel;
+        float _amplitudeRateOfChange;
+        float _amplitudeCoefficientOfVariation;
 
-  /// Get normalized respiration signal.
-  float getNormalized() const;
+        // Rpm 
+        unsigned long _interval;
+        float _rpm;
+        float _clampScaledRpm;
+        float _rpmLevel;
+        float _rpmRateOfChange;
+        float _rpmCoefficientOfVariation;
 
-  /// Returns true if a breath was detected during the last call to update().
-  bool breathDetected() const;
+        static const int numberOfCycles = 5;
+        int intervals[numberOfCycles] = {};
+        int _millisPassed = 0;
 
-  /// Returns BPM (breaths per minute).
-  float getBPM() const;
+//===========METHODS===========//
+  // Initializes Plaquette objects and variables
+  void initialize(unsigned long rate=50);
 
-  /// Returns raw signal as returned by analogRead().
-  int getRaw() const;
+  // Sets sample rate.
+  void setSampleRate(unsigned long rate=50);
 
-  ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
-  /* For example, if amplitude is average, returns 0.5,
-   * if amplitude is below average, returns < 0.5
-   * if amplitude is above average, returns > 0.5.
-  */
-  float amplitudeChange() const;
+  // Calls sample() at sampling rate
+  void update(float signal = 0);
 
-  /// Returns the average bpm of signal mapped between 0.0 and 1.0.
-  /* For example, if bpm is average, returns 0.5,
-    * if bpm is below average, returns < 0.5
-    * if bpm is above average, returns > 0.5.
-  */
-  float bpmChange() const;
+  void sample(float signal = 0);   // reads the signal and passes it to the signal processing functions
+  void peakOrTrough(float value); // base signal processing and peak detection
+  void amplitude(float value); // amplitude data processing
+  void rpm(); // respiration rate data processing
 
-  // Performs the actual adjustments of signals and filterings.
-  // Internal use: don't use directly, use update() instead.
-  void sample();
+  // Returns raw signal.
+  int32_t getRaw() const;
+
+  float getNormalized() const; //returns normalized initial signal
+  float getScaled() const; //returns min-max scaled initial signal
+  bool isExhaling() const; //returns true if user is exhaling 
+
+  int32_t getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum value in latest breath cycle)
+  float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+  float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
+  float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 
+  //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+  float getAmplitudeChange() const; //returns breath amplitude rate of change
+  float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
+
+  int64_t getInterval() const; //returns interbreath interval in milliseconds
+  float getRpm() const; //returns respiration rate (respirations per minute)
+  float getNormalizedRpm() const; //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+  float getScaledRpm() const; //returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
+  float getRpmLevel() const; //returns repiration rate level indicator (float between 0 and 1)
+  //(latest amplitudes are generally ===> 0 :  slower than baseline, 0.5 : similar to baseline, 1 : faster than baseline)
+  float getRpmChange() const; //returns respiration rate rate of change
+  float getRpmVariability() const; //returns respiration rate coefficient of variation 
 };
 
 #endif
