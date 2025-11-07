@@ -26,29 +26,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "Respiration.h"
 
+namespace pq {
 
 //=============================================CONSTRUCTORS=============================================//
 // constructor when using internal ADC 
-Respiration::Respiration(uint8_t pin, unsigned long rate) :
-  _pin(pin),              
-  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
-  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
-  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
-  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow),
-  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow),
-  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX),
-  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN),
-  smoother(smootherFactor),
-  amplitudeSmoother(amplitudeSmootherFactor),
-  amplitudeLevelSmoother(amplitudeLevelSmootherFactor),
-  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor),
-  rpmSmoother(rpmSmootherFactor),
-  rpmLevelSmoother(rpmLevelSmootherFactor),
-  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
-  minMaxScaler(),
-  _adcValue(13000),
+
+
+Respiration::Respiration(Engine& engine) : Respiration(50, engine) {}
+Respiration::Respiration(unsigned long rate, Engine& engine) :
+  // Sub-units.
+  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow, engine), 
+  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow, engine),
+  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow, engine),
+  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow, engine),
+  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow, engine),
+  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX, engine),
+  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN, engine),
+  smoother(smootherFactor, engine),
+  amplitudeSmoother(amplitudeSmootherFactor, engine),
+  amplitudeLevelSmoother(amplitudeLevelSmootherFactor, engine),
+  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor, engine),
+  rpmSmoother(rpmSmootherFactor, engine),
+  rpmLevelSmoother(rpmLevelSmootherFactor, engine),
+  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor, engine),
+  minMaxScaler(engine),
+  calibrationTimer(normalizerTimeWindow, engine),
+  // Variables.
+  _value(0),
   _minMaxScaled(0.5),
   _exhale(0),
   _amplitude(-FLT_MIN),
@@ -62,51 +69,19 @@ Respiration::Respiration(uint8_t pin, unsigned long rate) :
   _rpmLevel(0.5),
   _rpmRateOfChange(0),
   _rpmCoefficientOfVariation(0),
-  _millisPassed(0),
-  _getExternalADCValue(nullptr)
+  _millisPassed(0)
 {
   setSampleRate(rate);
-  reset();
 }
 
-// constructor when using external ADC
-Respiration::Respiration(int (*getExternalADCValue)(), unsigned long rate) :                
-  normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow), 
-  amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow),
-  normalizerForAmplitudeVariability(normalizerMean, normalizerStdDev, normalizerForAmplitudeVariabilityTimeWindow),
-  rpmNormalizer(normalizerMean, normalizerStdDev, rpmNormalizerTimeWindow),
-  normalizerForRpmVariability(normalizerMean, normalizerStdDev, normalizerForRpmVariabilityTimeWindow),
-  minMaxScaledPeak(minMaxScaledPeakThreshold, PEAK_MAX),
-  minMaxScaledTrough(minMaxScaledTroughThreshold, PEAK_MIN),
-  smoother(smootherFactor),
-  amplitudeSmoother(amplitudeSmootherFactor),
-  amplitudeLevelSmoother(amplitudeLevelSmootherFactor),
-  amplitudeRateOfChangeSmoother(amplitudeRateOfChangeSmootherFactor),
-  rpmSmoother(rpmSmootherFactor),
-  rpmLevelSmoother(rpmLevelSmootherFactor),
-  rpmRateOfChangeSmoother(rpmRateOfChangeSmootherFactor),
-  minMaxScaler(),
-  _adcValue(13000),
-  _minMaxScaled(0.5),
-  _exhale(0),
-  _amplitude(-FLT_MIN),
-  _clampScaledAmplitude(0.5),
-  _amplitudeLevel(0.5),
-  _amplitudeRateOfChange(0),
-  _amplitudeCoefficientOfVariation(0),
-  _interval(0),
-  _rpm(12),
-  _clampScaledRpm(0.5),
-  _rpmLevel(0.5),
-  _rpmRateOfChange(0),
-  _rpmCoefficientOfVariation(0),
-  _millisPassed(0),
-  _getExternalADCValue(getExternalADCValue)
-{
-  setSampleRate(rate);
-  reset();
+float Respiration::get() {
+  return getNormalized();
 }
 
+float Respiration::put(float value) {
+  _value = value;
+  return get();
+}
 
 //=================================================SET=============================================//
 // Sets certain Plaquette object parameters
@@ -117,8 +92,12 @@ void Respiration::reset() {
   minMaxScaledTrough.reloadThreshold(minMaxScaledTroughReloadThreshold);
   minMaxScaledTrough.fallbackTolerance(minMaxScaledTroughFallbackThreshold);
 
-  //set scaler time window (same as normalizer)
-  minMaxScaler.timeWindow(normalizerTimeWindow);
+  //set scaler time window (slower than normalizer)
+  minMaxScaler.timeWindow(20 * normalizerTimeWindow);
+
+  normalizer.noClamp();
+
+  calibrationTimer.start();
 
   // Perform one update.
   sample();
@@ -130,39 +109,131 @@ void Respiration::setSampleRate(unsigned long rate) {
 }
 
 //=============================================UPDATE=============================================//
-// Updates the signal
-void Respiration::update() {
+
+
+//==============================================GET=================================================//
+// Returns raw ADC value
+float Respiration::getRaw()  const {
+  return _value ;
+}
+
+//Returns normalized ADCsignal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalized() const {  
+  return normalizer;
+} 
+
+//Returns scaled ADC signal (float between 0 and 1) : scaled by minMaxScaler
+float Respiration::getScaled() const { 
+  return _minMaxScaled;
+}
+
+//Returns true if user is exhaling 
+bool Respiration::isExhaling() const{ 
+  return _exhale;
+}
+
+//Returns raw breah amplitude (ADC value)
+unsigned long Respiration::getRawAmplitude() const{ 
+  return max(_amplitude, 0);
+}
+
+ //Returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalizedAmplitude() const { 
+  return amplitudeNormalizer;
+}
+
+ //Returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
+float Respiration::getScaledAmplitude() const { 
+  return _clampScaledAmplitude;
+}
+
+//Returns breath amplitude level indicator (float between 0 and 1)
+ //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+float Respiration::getAmplitudeLevel() const { 
+  return _amplitudeLevel;
+}
+
+//Returns breath amplitude rate of change (ADC points/minute)
+float Respiration::getAmplitudeChange() const { 
+  return _amplitudeRateOfChange;
+}
+
+//Returns breath amplitude coefficient of variation
+float Respiration::getAmplitudeVariability() const { 
+  return _amplitudeCoefficientOfVariation;
+}
+
+//Returns respiration interval (milliseconds between breath cycles)
+unsigned long Respiration::getInterval() const { 
+  return _interval;
+}
+
+//Returns respiration rate (respirations per minute)
+float Respiration::getRpm() const { 
+  return _rpm;
+}
+
+//Returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+float Respiration::getNormalizedRpm() const { 
+  return rpmNormalizer;
+}
+
+ //Returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
+float Respiration::getScaledRpm() const { 
+  return _clampScaledRpm;
+}
+
+//Returns repiration rate level indicator (float between 0 and 1)
+ //(latest rpm values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+float Respiration::getRpmLevel() const { 
+  return _rpmLevel;
+}
+
+//Returns respiration rate of change (rpm/minute)
+float Respiration::getRpmChange() const { 
+  return _rpmRateOfChange;
+}
+
+//Returns respiration rate coefficient of variation
+float Respiration::getRpmVariability() const { 
+  return _rpmCoefficientOfVariation;
+}
+
+void Respiration::begin() {
+  reset();
+}
+
+void Respiration::step() {
   // sample at sampling rate
   if (sampleMetro) {
     sample();
   }
 }
 
+
 // Reads the signal and passes it to the signal processing functions
 void Respiration::sample() {
-  if(_getExternalADCValue){ // if using external ADC
-    _adcValue = _getExternalADCValue();
-  } else {
-    _adcValue = analogRead(_pin); // if using Arduino internal ADC
-  }
-
-  if(_adcValue >= 0){ // if ADC value is valid
-    peakOrTrough(_adcValue); // base signal processing
-    amplitude(_adcValue); // amplitude data processing
-    rpm(); // respiration rate data processing
-  }
+  peakOrTrough(_value); // base signal processing
+  amplitude(_value); // amplitude data processing
+  rpm(); // respiration rate data processing
 }
 
 // Base temperature signal processing and peak detection
 void Respiration::peakOrTrough(float value){
  value >> smoother >> normalizer; // smooth and normalize temperature signal
 
-  // PEAK DETECTION AND MIN MAX SCALED SIGNAL
-  _minMaxScaled = normalizer >> minMaxScaler; // scale to 0-1
-  minMaxScaler >> minMaxScaledPeak; // peak detection
-  minMaxScaler>> minMaxScaledTrough; // trough detection 
-  _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
-  // store true if exhaling (when trough is detected ; temperature is rising again)
+ if (calibrationTimer) {
+    // PEAK DETECTION AND MIN MAX SCALED SIGNAL
+    normalizer >> minMaxScaler;
+
+    minMaxScaler >> minMaxScaledPeak; // peak detection
+    minMaxScaler >> minMaxScaledTrough; // trough detection 
+
+    _minMaxScaled = minMaxScaler; // scale to 0-1
+
+    _exhale = minMaxScaledPeak ? 0 : minMaxScaledTrough ? 1 : _exhale; 
+    // store true if exhaling (when trough is detected ; temperature is rising again)
+ }
 }
 
 // Amplitude data processing
@@ -250,7 +321,9 @@ if (_interval > 0){ // if interval is valid
       intervalIndex = (intervalIndex + 1) % numberOfCycles;
 
       // Calculate sum of intervals
-      _millisPassed = std::accumulate(std::begin(intervals), std::end(intervals), 0); 
+      _millisPassed = 0;
+      for (int i = 0; i<numberOfCycles; i++)
+        _millisPassed += intervals[i];
 
   //RPM Change
     if (oldestInterval >0){ // if oldest interval is valid
@@ -272,96 +345,4 @@ if (_interval > 0){ // if interval is valid
   _rpmLevel = _clampScaledRpm >> rpmLevelSmoother; // smooth normalized rpm
 }
 
-
-//==============================================GET=================================================//
-// Returns raw ADC value
-unsigned long Respiration::getRaw()  const {
-return _adcValue ;
 }
-
-//Returns normalized ADCsignal (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
-float Respiration::getNormalized() const {  
-  return normalizer;
-} 
-
-//Returns scaled ADC signal (float between 0 and 1) : scaled by minMaxScaler
-float Respiration::getScaled() const { 
-  return _minMaxScaled;
-}
-
-//Returns true if user is exhaling 
-bool Respiration::isExhaling() const{ 
-  return _exhale;
-}
-
-//Returns raw breah amplitude (ADC value)
-unsigned long Respiration::getRawAmplitude() const{ 
-  if(_amplitude>=0){
-      return _amplitude;
-    } else {
-      return 0;
-    }
-}
-
- //Returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
-float Respiration::getNormalizedAmplitude() const { 
-  return amplitudeNormalizer;
-}
-
- //Returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
-float Respiration::getScaledAmplitude() const { 
-  return _clampScaledAmplitude;
-}
-
-//Returns breath amplitude level indicator (float between 0 and 1)
- //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-float Respiration::getAmplitudeLevel() const { 
-  return _amplitudeLevel;
-}
-
-//Returns breath amplitude rate of change (ADC points/minute)
-float Respiration::getAmplitudeChange() const { 
-  return _amplitudeRateOfChange;
-}
-
-//Returns breath amplitude coefficient of variation
-float Respiration::getAmplitudeVariability() const { 
-  return _amplitudeCoefficientOfVariation;
-}
-
-//Returns respiration interval (milliseconds between breath cycles)
-unsigned long Respiration::getInterval() const { 
-  return _interval;
-}
-
-//Returns respiration rate (respirations per minute)
-float Respiration::getRpm() const { 
-  return _rpm;
-}
-
-//Returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
-float Respiration::getNormalizedRpm() const { 
-  return rpmNormalizer;
-}
-
- //Returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
-float Respiration::getScaledRpm() const { 
-  return _clampScaledRpm;
-}
-
-//Returns repiration rate level indicator (float between 0 and 1)
- //(latest rpm values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-float Respiration::getRpmLevel() const { 
-  return _rpmLevel;
-}
-
-//Returns respiration rate of change (rpm/minute)
-float Respiration::getRpmChange() const { 
-  return _rpmRateOfChange;
-}
-
-//Returns respiration rate coefficient of variation
-float Respiration::getRpmVariability() const { 
-  return _rpmCoefficientOfVariation;
-}
-

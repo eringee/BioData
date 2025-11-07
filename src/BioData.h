@@ -29,6 +29,7 @@
 #ifndef BIO_DATA_H_
 #define BIO_DATA_H_
 
+#include <PlaquetteLib.h>
 #include "Heart.h"
 #include "SkinConductance.h"
 #include "Respiration.h"

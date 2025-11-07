@@ -27,30 +27,67 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <Arduino.h>
-#include <Wire.h>  
-#include <numeric>
 
-#include "PlaquetteLib.h" //https://sofapirate.github.io/Plaquette/index.html
+#ifndef RESPIRATION_H_
+#define RESPIRATION_H_
 
-using namespace pq;
+#include <PlaquetteLib.h>
 
-#ifndef RESP_H_
-#define RESP_H_
+namespace pq {
 
-class Respiration {
+class Respiration : public Unit {
 
-  public:   
-  //==============CONSTRUCTORS==============//
-  Respiration(uint8_t pin, unsigned long rate=50);   
-  // Constructor with Arduino pin + internal ADC. Default respiration samplerate is 50Hz
-  Respiration(int (*getExternalADCValue)(), unsigned long rate=50);   
-  // Constructor with external ADC. Default respiration samplerate is 50Hz
+public:   
+  Respiration(Engine& engine = Engine::primary());   
+  Respiration(unsigned long rate, Engine& engine = Engine::primary());   
   virtual ~Respiration() {};
 
-  // Analog pin the Respiration sensor is connected to, if using Arduino pin
-  uint8_t _pin;
+//===========METHODS===========//
+  virtual float get();
+  virtual float put(float value);
 
+  // Sets certain Plaquette object parameters
+  void reset();
+
+  // Sets sample rate.
+  void setSampleRate(unsigned long rate);
+
+  // Returns raw ADC signal.
+  float getRaw() const;
+
+  float getNormalized() const; //returns normalized ADC signal
+  float getScaled() const; //returns min-max scaled ADC signal
+  bool isExhaling() const; //returns true if user is exhaling 
+
+  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum ADC value in latest breath cycle)
+  float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+  float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
+  float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 
+  //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
+  float getAmplitudeChange() const; //returns breath amplitude rate of change
+  float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
+
+  unsigned long getInterval() const; //returns interbreath interval in milliseconds
+  float getRpm() const; //returns respiration rate (respirations per minute)
+  float getNormalizedRpm() const; //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
+  float getScaledRpm() const; //returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
+  float getRpmLevel() const; //returns repiration rate level indicator (float between 0 and 1)
+  //(latest amplitudes are generally ===> 0 :  slower than baseline, 0.5 : similar to baseline, 1 : faster than baseline)
+  float getRpmChange() const; //returns respiration rate rate of change
+  float getRpmVariability() const; //returns respiration rate coefficient of variation 
+
+public:
+    virtual void begin();
+    virtual void step();
+
+      // Calls sample() at sampling rate
+  void sample();   // reads the signal and passes it to the signal processing functions
+  void peakOrTrough(float value); // base ADC signal processing and peak detection
+  void amplitude(float value); // amplitude data processing
+  void rpm(); // respiration rate data processing
+
+
+public:
   // Sample rate in Hz.
   unsigned long sampleRate;
 
@@ -109,10 +146,10 @@ class Respiration {
 
     //-----PLAQUETTE OBJECTS-----//
         // Normalizers
-        Normalizer normalizer;
-        Normalizer amplitudeNormalizer;
+        mutable Normalizer normalizer;
+        mutable Normalizer amplitudeNormalizer;
         Normalizer normalizerForAmplitudeVariability;
-        Normalizer rpmNormalizer;
+        mutable Normalizer rpmNormalizer;
         Normalizer normalizerForRpmVariability;
 
         // Peak detectors
@@ -130,10 +167,12 @@ class Respiration {
 
         // MinMax Scaler
         MinMaxScaler minMaxScaler;
+
+        Alarm calibrationTimer;
     
     //-----VARIABLES-----//
         // Raw signal
-        int _adcValue;
+        float _value;
         float _minMaxScaled;
 
         // exhale (exhale = temperature peak)
@@ -157,48 +196,9 @@ class Respiration {
         static const int numberOfCycles = 5;
         int intervals[numberOfCycles] = {};
         int _millisPassed = 0;
-
-//===========METHODS===========//
-  // Sets certain Plaquette object parameters
-  void reset();
-
-  // Sets sample rate.
-  void setSampleRate(unsigned long rate);
-
-  // Calls sample() at sampling rate
-  void update();
-
-  void sample();   // reads the signal and passes it to the signal processing functions
-  void peakOrTrough(float value); // base ADC signal processing and peak detection
-  void amplitude(float value); // amplitude data processing
-  void rpm(); // respiration rate data processing
-
-  // Returns raw ADC signal.
-  unsigned long getRaw() const;
-
-  float getNormalized() const; //returns normalized ADC signal
-  float getScaled() const; //returns min-max scaled ADC signal
-  bool isExhaling() const; //returns true if user is exhaling 
-
-  unsigned long getRawAmplitude() const; //returns breah amplitude (difference bewteen maximum and minimum ADC value in latest breath cycle)
-  float getNormalizedAmplitude() const; //returns normalized breath amplitude (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
-  float getScaledAmplitude() const; //returns scaled breath amplitude (float between 0 and 1) : scaled by mapping and clamping normalized amplitude
-  float getAmplitudeLevel() const; //returns breath amplitude level indicator (float between 0 and 1) 
-  //(latest amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-  float getAmplitudeChange() const; //returns breath amplitude rate of change
-  float getAmplitudeVariability() const; //returns breath amplitude coefficient of variation
-
-  unsigned long getInterval() const; //returns interbreath interval in milliseconds
-  float getRpm() const; //returns respiration rate (respirations per minute)
-  float getNormalizedRpm() const; //returns normalized respiration rate (target mean 0, stdDev 1) (example: -2 is lower than usual, +2 is higher than usual)
-  float getScaledRpm() const; //returns scaled respiration rate (float between 0 and 1) : scaled by mapping and clamping normalized rpm
-  float getRpmLevel() const; //returns repiration rate level indicator (float between 0 and 1)
-  //(latest amplitudes are generally ===> 0 :  slower than baseline, 0.5 : similar to baseline, 1 : faster than baseline)
-  float getRpmChange() const; //returns respiration rate rate of change
-  float getRpmVariability() const; //returns respiration rate coefficient of variation 
-
-private: 
- int (*_getExternalADCValue)(void); // pointer to function that returns ADC value
 };
+
+}
+
 
 #endif
