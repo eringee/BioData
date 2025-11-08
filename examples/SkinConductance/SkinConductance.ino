@@ -15,34 +15,72 @@ the Free Software Foundation.
     For more details: <http://www.gnu.org/licenses/>.
 
 ******************************************************/
-#include <SkinConductance.h>
+#include <BioData.h>
+
+using namespace pq; // use Plaquette namespace to access Metro class
+
+AnalogIn skinSensor(A6, INVERTED);
+
+DigitalOut exhaleLed(13);
+
+Wave sclSim(SINE, 120.0);
+Wave scrSim(SINE, 2.0, 0.25);
+
 
 // Create instance for sensor on analog input pin.
-SkinConductance sc(A6);
+SkinConductance sc;
 
-//variable for attenuating data flow to serial port prevents crashes
-const long printInterval = 50;       // millis
+Metronome printerMetro(0.01); // print every 0.1 seconds
 
 void setup() {
-  Serial.begin(9600);  // works best in testing with 9600 or lower
+ // Setup Plaquette
+  Plaquette.begin();
 
-  // Initialize sensor.
-  sc.reset();
-  // uncomment below to redefine samplerate, default is 100Hz  
-  //sc.setSampleRate(100);  
+  sclSim.randomize(0.2);
+  scrSim.randomize(0.7);
 }
 
 void loop() {
-  // Update sensor.
-  sc.update();
-  unsigned long currentMillis = millis();    // update time
-  if (currentMillis%printInterval == 0) {  //to avoid crashing serial port
+  // Call a Plaquette step at every loop
+   Plaquette.step();
+
+   float signal = sclSim + 0.1*scrSim;
+
+  // Update sensor. 
+  signal >> sc;
+  
+  // Print values
+  // Prints out a few breath features extracted from signal. 
+  // For list of all available features, see "Respiration.h"
+  if (printerMetro) { // print every 0.1 seconds
     // Print-out values.
-    Serial.print(sc.getSCR()); // this number changes only when a large enough spike in skin conductivity occurs.
-    Serial.print(" ");
-    Serial.print(sc.getSCL()); // the averaged level of skin conductivity as measured by the ADC
-    Serial.print(" ");
-    Serial.print(sc.getRaw()); // raw ADC value.
-    Serial.println();
+    beginPrintItems();
+    printItem("raw", sc.getRaw());
+    printItem("scaled", sc.getScaled());
+    printItem("SCR", sc.getSCR());
+    printItem("SCL", sc.getSCL());
+    printItem("fast", sc.getFast());
+    endPrintItems();
   }
+}
+
+bool firstPrint = false;
+void beginPrintItems() {
+  firstPrint = true;
+  Serial.print(">");
+}
+
+void endPrintItems() {
+  Serial.println();
+}
+
+void printItem(char* fieldName, float value) {
+  if (firstPrint) {
+    firstPrint = false;
+  }
+  else
+    Serial.print(",");
+  Serial.print(fieldName);
+  Serial.print(":");
+  Serial.print(value, 4);
 }

@@ -29,71 +29,63 @@
  */
 #include "SkinConductance.h"
 
+namespace pq {
 
-float alpha_1 = 0.01;
-float alpha_2 = 0.005;
-
-SkinConductance::SkinConductance(uint8_t pin, unsigned long rate) :
-  _pin(pin)
+SkinConductance::SkinConductance(Engine& engine) : SkinConductance(50, engine) {}
+SkinConductance::SkinConductance(unsigned long rate, Engine& engine) :
+  Unit(engine),
+//  sampleMetro(rate, engine),
+  slowLowPass(12.0, engine),
+  fastLowPass(1.0, engine),
+  normalizer(engine),
+  minMaxScaler(engine)
 {
-  setSampleRate(rate);
+//  setSampleRate(rate);
+  normalizer.timeWindow(minutesToSeconds(10));
+  minMaxScaler.timeWindow(minutesToSeconds(10));
+
   reset();
 }
 
+
+float SkinConductance::get() {
+  return getScaled();
+}
+
+float SkinConductance::put(float value) {
+  _value = value;
+  return get();
+}
+
 void SkinConductance::reset() {
-  gsrSensorReading = 0;
-
-  gsrSensorFiltered = 0;
-  gsrSensorLopFiltered = 0;
-  gsrSensorAmplitude = 0;
-  gsrSensorLopassed = 0;
-  gsrSensorChangeFiltered = 0;
-
-  prevSampleMicros = micros();
-
-  // Perform one update.
-  sample();
 }
 
-void SkinConductance::setSampleRate(unsigned long rate) {
-  sampleRate = rate;
-  microsBetweenSamples = 1000000UL / sampleRate;
-}
-
-void SkinConductance::update() {
-  unsigned long t = micros();
-  if (t - prevSampleMicros >= microsBetweenSamples) {
-    // Perform updates.
-    sample();
-    prevSampleMicros = t;
-  }
-}
-
-float SkinConductance::getSCR() const {
-    return gsrSensorChange;
-}
-
-float SkinConductance::getSCL() const {
-    return gsrSensorLopFiltered;
-}
-
-int SkinConductance::getRaw() const {
-  return gsrSensorReading;
-}
+// void SkinConductance::setSampleRate(unsigned long rate) {
+//   sampleRate = rate;
+//   microsBetweenSamples = 1000000UL / sampleRate;
+// }
 
 void SkinConductance::sample() {
-    // Read sensor value and invert it.
-    gsrSensorReading = 1023 - analogRead(_pin); //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-    gsrSensorReading = 1023 - analogRead(_pin);
-    // Smooth out the signals that you compare to one another and map between 0 and 1000
+  // Rescale value.
+  _value >> normalizer >> minMaxScaler;
 
-    gsrSensorLop = alpha_1*gsrSensorReading + (1 - alpha_1)*gsrSensorLop;
-    gsrSensorLopassed = alpha_2*gsrSensorLop + (1 - alpha_2)*gsrSensorLopassed;
+  // Compute low-pass filters (slow and fast).
+  minMaxScaler >> slowLowPass;
+  minMaxScaler >> fastLowPass;
 
-    gsrSensorChange = ((gsrSensorLop - gsrSensorLopassed)/10)+0.2;
+  // Compute values for SCL and SCR.
+  _scl = slowLowPass;
+  _scr = max(fastLowPass - slowLowPass, 0);
 
-    gsrSensorLopFiltered = map(gsrSensorLop, 0, 1023, 0, 1000)*0.001;
+  _scaledValue = minMaxScaler;
+}
 
-    gsrSensorChange = constrain(gsrSensorChange, 0, 1);
+void SkinConductance::begin() {
+  reset();
+}
+
+void SkinConductance::step() {
+  sample();
+}
 
 }

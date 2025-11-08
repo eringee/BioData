@@ -26,67 +26,86 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <Arduino.h>
-
-#include "Average.h"
-#include "MinMax.h"
-#include "Lop.h"
-#include "Hip.h"
-
 
 #ifndef SKIN_CONDUCTANCE_H_
 #define SKIN_CONDUCTANCE_H_
 
+#include <PlaquetteLib.h>
 
-class SkinConductance {
+namespace pq {
 
-  // Analog pin the SC sensor is connected to.
-  uint8_t _pin;
-  int gsrSensorReading;
-
-  float gsrSensorFiltered;
-  float gsrSensorLopFiltered;
-  float gsrSensorChange;
-  float gsrSensorChangeFiltered;
-  float gsrSensorAmplitude;
-  float gsrSensorLop;
-  float gsrSensorLopassed;
-
-  // Sample rate in Hz.
-  unsigned long sampleRate;
-
-  // Internal use.
-  unsigned long microsBetweenSamples;
-  unsigned long prevSampleMicros;
+class SkinConductance : public Unit {
 
 public:
-  SkinConductance(uint8_t pin, unsigned long rate=50); // default SC samplerate is 50Hz
+  // Constructors.
+  SkinConductance(Engine& engine = Engine::primary());   
+  SkinConductance(unsigned long rate, Engine& engine = Engine::primary());   
   virtual ~SkinConductance() {}
 
   /// Resets all values.
   void reset();
 
   /// Sets sample rate.
-  void setSampleRate(unsigned long rate);
+  // void setSampleRate(unsigned long rate);
 
-  /**
-   * Reads the signal and perform filtering operations. Call this before
-   * calling any of the access functions.
-   */
-  void update();
+  virtual float get();
+  virtual float put(float value);
 
-  /// Returns skin conductance response (SRC).
-  float getSCR() const;
+  /// Returns Skin Conductance Response (SRC).
+  float getSCR() const { return _scr; }
 
-  /// Returns skin conductance level (SCL).
-  float getSCL() const;
+  /// Returns Skin Conductance Level (SCL).
+  float getSCL() const { return _scl; }
 
   /// Returns raw signal as returned by analogRead() (inverted).
-  int getRaw() const;
+  float getRaw() const { return _value; }
+
+  /// Returns normalized signal scaled in [0, 1].
+  float getScaled() const { return _scaledValue; }
+
+  float getFast() { return fastLowPass.get(); }
 
   // Performs the actual adjustments of signals and filterings.
   // Internal use: don't use directly, use update() instead.
   void sample();
+
+protected:
+  virtual void begin();
+  virtual void step();
+
+  Smoother slowLowPass;
+  Smoother fastLowPass;
+
+  Normalizer normalizer;
+  MinMaxScaler minMaxScaler;
+
+  Alarm calibrationTimer;
+
+  // Raw value.
+  float _value;
+
+  float _scaledValue;
+
+  float _scl;
+  float _scr;
+
+  // float gsrSensorFiltered;
+  // float gsrSensorLopFiltered;
+  // float gsrSensorChange;
+  // float gsrSensorChangeFiltered;
+  // float gsrSensorAmplitude;
+  // float gsrSensorLop;
+  // float gsrSensorLopassed;
+
+  // Sample rate in Hz.
+  unsigned long sampleRate;
+
+  // // Internal use.
+  // unsigned long microsBetweenSamples;
+  // unsigned long prevSampleMicros;
+
 };
+
+}
 
 #endif
