@@ -37,6 +37,7 @@ namespace pq {
 
 Respiration::Respiration(Engine& engine) : Respiration(50, engine) {}
 Respiration::Respiration(unsigned long rate, Engine& engine) :
+  Unit(engine),
   // Sub-units.
   normalizer(normalizerMean, normalizerStdDev, normalizerTimeWindow, engine), 
   amplitudeNormalizer(normalizerMean, normalizerStdDev, amplitudeNormalizerTimeWindow, engine),
@@ -75,7 +76,7 @@ Respiration::Respiration(unsigned long rate, Engine& engine) :
 }
 
 float Respiration::get() {
-  return getNormalized();
+  return getScaled();
 }
 
 float Respiration::put(float value) {
