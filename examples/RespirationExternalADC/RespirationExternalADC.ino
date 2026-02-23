@@ -1,10 +1,16 @@
-// Respiration sensing using the microcontroller's built-in ADC.
+// Respiration sensing using an external ADS1115 16-bit ADC.
 //
 // The sensor is a thermistor (temperature-sensitive resistor) placed under
 // the nostrils. It detects temperature changes caused by airflow during
 // breathing and produces a respiration signal.
 //
-// For higher resolution, see the Respiration_ExternalADC example.
+// An external ADC (ADS1115) is used instead of the microcontroller's
+// built-in ADC to provide higher resolution (16-bit vs typically 10-bit),
+// improving sensitivity to small temperature changes.
+//
+// The ADS1115 communicates with the microcontroller over I²C.
+// Requires the ADS1X15 library by Rob Tillaart:
+// https://github.com/RobTillaart/ADS1X15
 //
 // For more info see README at https://github.com/eringee/BioData/
 /******************************************************
@@ -22,13 +28,16 @@ the Free Software Foundation.
 ******************************************************/
 
 #include "Respiration.h" // include BioData Respiration module
+#include <ADS1X15.h> // include ADS1115 library
 
 using namespace pq; // use namespace pq to access objects from Plaquette library (Metronome)
 
 int LEDPin = 13; // LED pin
-int thermistorPin = A0; // thermistor connected to analog pin A0
+int thermistorPin = 0; // thermistor connected to ADS1115 channel A0
 
 Metro printerMetro(0.1); // print every 0.1 seconds
+
+ADS1115 ADS(0x48); // ADS1115 I²C default address 
 
 // Create Respiration instance
 // Argument (optional): sampling rate (default = 50 Hz)
@@ -38,13 +47,21 @@ void setup() {
   Plaquette.begin(); // initialize Plaquette
   Serial.begin(9600); // initialize serial communication
   resp.reset(); // initialize sensor
+
+  // Initialize ADS1115
+  Wire.begin();       // join I²C bus
+  ADS.begin();        // initialize
+  ADS.setGain(1);     // input range 4.096V
+  ADS.setDataRate(7); // 0 = slow, 4 = medium, 7 = fast
+  ADS.setMode(0);     // continuous mode
+  ADS.readADC(thermistorPin); // first read to trigger continuous mode
 }
 
 void loop() {
   Plaquette.step(); // Call a Plaquette step at every loop
 
-  // Read thermistor from analog pin and pass to resp
-  resp.update(analogRead(thermistorPin));
+  // Read ADS1115 and pass value to resp
+  resp.update(ADS.getValue());
 
   if (printerMetro) { // print every 0.1 seconds
     // Raw ADC value from thermistor

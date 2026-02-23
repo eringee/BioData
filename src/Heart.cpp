@@ -27,18 +27,39 @@
  */
 #include "Heart.h"
 
-Heart::Heart(uint8_t pin, unsigned long rate) :
-_pin(pin),
-heartThresh(0.25, 0.4),              // if signal does not fall below (low, high) bounds than signal is ignored
-heartMinMaxSmoothing(0.1),
-heartSensorAmplitudeLop(0.001),
-heartSensorBpmLop(0.001),
-heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
-heartSensorBpmLopValueMinMaxSmoothing(0.001)
+//=============================================CONSTRUCTORS=============================================//
+// CONSTRUCTOR
+Heart::Heart(unsigned long rate) : 
+    heartThresh(0.25, 0.4),              // if signal does not fall below (low, high) bounds than signal is ignored
+    heartMinMaxSmoothing(0.1),
+    heartSensorAmplitudeLop(0.001),
+    heartSensorBpmLop(0.001),
+    heartSensorAmplitudeLopValueMinMaxSmoothing(0.001),
+    heartSensorBpmLopValueMinMaxSmoothing(0.001)
 {
+    initialize(rate);
+    timer.start();
+} 
+
+//=================================================SET=============================================//
+void Heart::initialize(unsigned long rate) {
+    heartMinMax.reset();
+    heartSensorAmplitudeLop.reset();
+    heartSensorBpmLop.reset();
+    heartSensorAmplitudeLopValueMinMax.reset();
+    heartSensorBpmLopValueMinMax.reset();
+
+    heartSensorSignal = heartSensorFiltered = heartSensorAmplitude = 0;
+    bpmChronoStart = timer.getMillis();
+
+    bpm = 60;
+    beat = false;
+
+    prevSampleMicros = timer.getMicros();
+
     setSampleRate(rate);
-    reset();
 }
+
 
 void Heart::setAmplitudeSmoothing(float smoothing)
 {
@@ -52,48 +73,30 @@ void Heart::setBpmSmoothing(float smoothing)
 
 void Heart::setAmplitudeMinMaxSmoothing(float smoothing)
 {
-    heartSensorAmplitudeLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorAmplitudeLopValueMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setBpmMinMaxSmoothing(float smoothing)
 {
-    heartSensorBpmLopValueMinMaxSmoothing = constrain(smoothing, 0, 1);
+    heartSensorBpmLopValueMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setMinMaxSmoothing(float smoothing)
 {
-    heartMinMaxSmoothing = constrain(smoothing, 0, 1);
-}
-
-void Heart::reset() {
-    heartMinMax.reset();
-    heartSensorAmplitudeLop.reset();
-    heartSensorBpmLop.reset();
-    heartSensorAmplitudeLopValueMinMax.reset();
-    heartSensorBpmLopValueMinMax.reset();
-
-    heartSensorReading = heartSensorFiltered = heartSensorAmplitude = 0;
-    bpmChronoStart = millis();
-
-    bpm = 60;
-    beat = false;
-
-    prevSampleMicros = micros();
-
-    // Perform one update.
-    sample();
+    heartMinMaxSmoothing = clamp(smoothing, 0, 1);
 }
 
 void Heart::setSampleRate(unsigned long rate) {
-    sampleRate = rate;
-    microsBetweenSamples = 1000000UL / sampleRate;
+    _sampleRate = rate;
+    microsBetweenSamples = 1000000UL / _sampleRate;
 }
 
-void Heart::update() {
-    unsigned long t = micros();
+void Heart::update(float signal) {
+    heartSensorSignal = signal;
+    unsigned long t = timer.getMicros();
     if (t - prevSampleMicros >= microsBetweenSamples) {
         // Perform updates.
-        sample();
+        sample(signal);
         prevSampleMicros = t;
     }
 }
@@ -118,16 +121,15 @@ float Heart::getBPM() const {
     return bpm;
 }
 
-int Heart::getRaw() const {
-    return heartSensorReading;
+int32_t Heart::getRaw() const {
+    return heartSensorSignal;
 }
 
-void Heart::sample() {
+void Heart::sample(float signal) {
     // Read analog value if needed.
-    heartSensorReading = analogRead(_pin);  //this is a dummy read to clear the adc.  This is needed at higher sampling frequencies.
-    heartSensorReading = analogRead(_pin);
+    heartSensorSignal = signal;
 
-    heartSensorFiltered = heartMinMax.filter(heartSensorReading);
+    heartSensorFiltered = heartMinMax.filter(heartSensorSignal);
     heartSensorAmplitude = heartMinMax.getMax() - heartMinMax.getMin();
     heartMinMax.adapt(heartMinMaxSmoothing); // APPLY A LOW PASS ADAPTION FILTER TO THE MIN AND MAX
 
@@ -142,7 +144,7 @@ void Heart::sample() {
     beat = heartThresh.detect(heartSensorFiltered);
 
     if ( beat ) {
-        unsigned long ms = millis();
+        unsigned long ms = timer.getMillis();
         float temporaryBpm = 60000. / (ms - bpmChronoStart);
         bpmChronoStart = ms;
         if ( temporaryBpm > 30 && temporaryBpm < 200 ) // make sure the BPM is within bounds

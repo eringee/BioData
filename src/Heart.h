@@ -30,14 +30,13 @@
 #include "MinMax.h"
 #include "Threshold.h"
 #include "Lop.h"
+#include "Timing.h"
+#include "utils.h"
 
 #ifndef HEART_H_
 #define HEART_H_
 
 class Heart {
-    
-    // Analog pin the Heart sensor is connected to.
-    uint8_t _pin;
     
     unsigned long bpmChronoStart;
     
@@ -63,22 +62,24 @@ class Heart {
     float heartSensorFiltered;
     float heartSensorAmplitude;
     
-    float heartSensorReading;
+    float heartSensorSignal;
     
     float bpm;  // this value is fed to initialize your BPM before a heartbeat is detected
     
     bool beat;
     
     // Sample rate in Hz.
-    unsigned long sampleRate;
+    unsigned long _sampleRate;
     
     // Internal use.
     unsigned long microsBetweenSamples;
     unsigned long prevSampleMicros;
     
 public:
-    Heart(uint8_t pin, unsigned long rate=200); // default samplerate is 200Hz
+    Heart(unsigned long rate=200); // default samplerate is 200Hz
     virtual ~Heart() {}
+
+    Timing timer;
     
     void setAmplitudeSmoothing(float smoothing);
     void setBpmSmoothing(float smoothing);
@@ -86,18 +87,18 @@ public:
     void setBpmMinMaxSmoothing(float smoothing);
     void setMinMaxSmoothing(float smoothing);
     
-    /// Resets all values.
-    void reset();
+    /// Initializes.
+    void initialize(unsigned long rate=200);
     
     /// Sets sample rate.
-    void setSampleRate(unsigned long rate);
+    void setSampleRate(unsigned long rate=200);
     
     /**
      * Reads the signal and perform filtering operations. Call this before
      * calling any of the access functions. This function takes into account
      * the sample rate.
      */
-    void update();
+    void update(float signal = 0);
     
     /// Get normalized heartrate signal.
     float getNormalized() const;
@@ -109,7 +110,7 @@ public:
     float getBPM() const;
     
     /// Returns raw signal as returned by analogRead().
-    int getRaw() const;
+    int32_t getRaw() const;
     
     ///Returns the average amplitude of signal mapped between 0.0 and 1.0.
     /* For example, if amplitude is average, returns 0.5,
@@ -127,7 +128,7 @@ public:
     
     // Performs the actual adjustments of signals and filterings.
     // Internal use: don't use directly, use update() instead.
-    void sample();
+    void sample(float signal = 0);
 };
 
 #endif
