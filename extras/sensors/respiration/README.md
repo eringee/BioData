@@ -17,7 +17,7 @@ A thermistor is a temperature-sensitive resistor.  Here, an NTC (Negative Temper
 
 ![Schematic](schematic.png)
 
-The MA100 thermistor and a 10kΩ reference resistor (matching the MA100 nominal resistance at 25°C) form a voltage divider between the power rail and GND. Themidpoint voltage varies with temperature and is read by the ADS1115, an external
+The MA100 thermistor and a 10kΩ reference resistor (matching the MA100 nominal resistance at 25°C) form a voltage divider between the power rail and GND. The midpoint voltage varies with temperature and is read by the ADS1115, an external
 16-bit ADC (Analog-to-Digital Converter). Using an external ADC instead of the microcontroller's built-in ADC provides higher resolution (16-bit versus the 10-bit typical of most microcontrollers), improving sensitivity to small temperature changes. The ADS1115 communicates with the microcontroller over I²C through the SCL and SDA pins.
 
 ## Power
