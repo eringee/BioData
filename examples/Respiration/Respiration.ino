@@ -1,6 +1,12 @@
-// This example demonstrates gathering data relevant to respiration
-
-// for more info see README at https://github.com/eringee/BioData/
+// Respiration sensing using the microcontroller's built-in ADC.
+//
+// The sensor is a thermistor (temperature-sensitive resistor) placed under
+// the nostrils. It detects temperature changes caused by airflow during
+// breathing and produces a respiration signal.
+//
+// For higher resolution, see the Respiration_ExternalADC example.
+//
+// For more info see README at https://github.com/eringee/BioData/
 /******************************************************
 copyright Erin Gee 2017
 Authors Erin Gee // Martin Peach // Thomas Ouellet-Fredericks // Luana Belinsky
@@ -15,81 +21,63 @@ the Free Software Foundation.
     For more details: <http://www.gnu.org/licenses/>.
 ******************************************************/
 
-/*
-The sensor used here is a thermistor (temperature sensor), placed at airway entrance 
-to obtain a breath temperature signal that is analysed to extract features.
-*/ 
+#include "Respiration.h" // include BioData Respiration module
 
-#include "Respiration.h"
-
-using namespace pq; // use Plaquette namespace to access Metro class
+using namespace pq; // use namespace pq to access objects from Plaquette library (Metronome)
 
 int LEDPin = 13; // LED pin
-int thermistorPin = 0; // thermistor pin
+int thermistorPin = A0; // thermistor connected to analog pin A0
 
-Metro printerMetro (0.1); // print every 0.1 seconds
+Metro printerMetro(0.1); // print every 0.1 seconds
 
-// Create instance for sensor on analog input pin. 
-//  Argument 1 : input pin 
-//  Argument 2 (optional): sampling rate (default = 50 Hz)
- Respiration resp(thermistorPin);
+// Create Respiration instance
+// Argument (optional): sampling rate (default = 50 Hz)
+Respiration resp;
 
 void setup() {
- // Setup Plaquette
-  Plaquette.begin();
- // Initialize serial port
-  Serial.begin(9600); 
-  
-  // Initialize sensor.
-   resp.reset();
+  Plaquette.begin(); // initialize Plaquette
+  Serial.begin(9600); // initialize serial communication
+  resp.reset(); // initialize sensor
 }
 
 void loop() {
-  // Call a Plaquette step at every loop
-   Plaquette.step();
+  Plaquette.step(); // Call a Plaquette step at every loop
 
-  // Update sensor. 
-   resp.update();
-  
-  // Print values
-  // Prints out a few breath features extracted from signal. 
-  // For list of all available features, see "Respiration.h"
+  // Read thermistor from analog pin and pass to resp
+  resp.update(analogRead(thermistorPin));
+
   if (printerMetro) { // print every 0.1 seconds
-      // Get raw ADC value
-        Serial.print("Raw: ");
-        Serial.print(resp.getRaw());
-        Serial.print("  ");
-      // Get scaled breath signal (returns a float between 0 and 1)
-      // 0 = minimum value, inhale
-      // 1 = maxmimum value, exhale
-        Serial.print("Scaled: ");
-        Serial.print(resp.getScaled());
-        Serial.print("  ");
+    // Raw ADC value from thermistor
+    Serial.print("Raw: ");
+    Serial.print(resp.getRaw());
+    Serial.print("  ");
 
-      // Exhaling ? Returns true if user is exhaling
-        Serial.print("Exhaling:");
-        Serial.print(resp.isExhaling());
-        Serial.print("  ");
+    // Scaled breath signal (float between 0 and 1)
+    // 0 = inhale, 1 = exhale
+    Serial.print("Scaled: ");
+    Serial.print(resp.getScaled());
+    Serial.print("  ");
 
-      // Get amplitude level
-      // (latest breath amplitudes are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("Amplitude_level: ");
-        Serial.print(resp.getAmplitudeLevel());
-        Serial.print("  ");
+    // Returns true if user is exhaling
+    Serial.print("Exhaling: ");
+    Serial.print(resp.isExhaling());
+    Serial.print("  ");
 
-      // Get RPM (respirations per minute) level 
-      // (latest RPM values are generally ===> 0 :  smaller than baseline, 0.5 : similar to baseline, 1 : larger than baseline)
-        Serial.print("RPM_level: ");
-        Serial.print(resp.getRpmLevel());   
-        Serial.print("  ");
+    // Amplitude level (float between 0 and 1)
+    // 0 = smaller than baseline, 0.5 = similar, 1 = larger
+    Serial.print("Amplitude_level: ");
+    Serial.print(resp.getAmplitudeLevel());
+    Serial.print("  ");
 
-      Serial.println(" ");
-  }    
+    // RPM level (float between 0 and 1)
+    // 0 = slower than baseline, 0.5 = similar, 1 = faster
+    Serial.print("RPM_level: ");
+    Serial.print(resp.getRpmLevel());
+    Serial.print("  ");
 
-  // An example of how to do something when user is exaling
-  if(resp.isExhaling()) { // if the user is exhaling
-    digitalWrite(LEDPin, HIGH);
-  } else{
-    digitalWrite(LEDPin, LOW);
-  }                               
-}   
+    Serial.println();
+  }
+
+  // Example: light LED when exhaling
+  digitalWrite(LEDPin, resp.isExhaling() ? HIGH : LOW);
+}
