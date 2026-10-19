@@ -28,44 +28,44 @@
  */
 
 #include "Average.h"
-#include "MinMax.h"
-#include "Lop.h"
 #include "Hip.h"
+#include "Lop.h"
+#include "MinMax.h"
 #include "Timing.h"
 #include "utils.h"
 
-
+#include <optional>
 #ifndef SKIN_CONDUCTANCE_H_
 #define SKIN_CONDUCTANCE_H_
 
+class SkinConductance final
+{
+  int gsrSensorSignal{};
 
-class SkinConductance {
-
-  int gsrSensorSignal;
-
-  float gsrSensorFiltered;
-  float gsrSensorLopFiltered;
-  float gsrSensorChange;
-  float gsrSensorChangeFiltered;
-  float gsrSensorAmplitude;
-  float gsrSensorLop;
-  float gsrSensorLopassed;
+  float gsrSensorFiltered{};
+  float gsrSensorLopFiltered{};
+  float gsrSensorChange{};
+  float gsrSensorChangeFiltered{};
+  float gsrSensorAmplitude{};
+  float gsrSensorLop{};
+  float gsrSensorLopassed{};
 
   // Sample rate in Hz.
-  unsigned long _sampleRate;
+  unsigned long _sampleRate{};
 
   // Internal use.
-  unsigned long microsBetweenSamples;
-  unsigned long prevSampleMicros;
+  unsigned long microsBetweenSamples{};
+  unsigned long prevSampleMicros{};
 
 public:
-  SkinConductance(unsigned long rate=50); // default SC samplerate is 50Hz
-  virtual ~SkinConductance() {}
+  explicit SkinConductance(unsigned long rate = 50); // default SC samplerate is 50Hz
 
   Timing timer;
 
   /// Initializes the sensor.
-  void initialize(unsigned long rate=50);
+  void initialize(
+      unsigned long rate = 50,
+      std::optional<unsigned long> initialMicros = std::nullopt);
 
   /// Sets sample rate.
   void setSampleRate(unsigned long rate=50);
@@ -74,6 +74,7 @@ public:
    * Reads the signal and perform filtering operations. Call this before
    * calling any of the access functions.
    */
+  void update(float signal, unsigned long elapsedMicros);
   void update(float signal);
 
   /// Returns skin conductance response (SRC).

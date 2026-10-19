@@ -40,6 +40,7 @@
 
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 inline static float sqr(float x) {
     return x*x;
@@ -221,7 +222,6 @@ template <class T> float Average<T>::stddev() {
 	float sum;
 	float mu;
 	float theta;
-	int i;
 
     if (_count == 0) {
         return 0;

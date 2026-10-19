@@ -37,7 +37,9 @@ SkinConductance::SkinConductance(unsigned long rate)
   initialize(rate);
 }
 
-void SkinConductance::initialize(unsigned long rate) {
+void SkinConductance::initialize(
+    unsigned long rate, std::optional<unsigned long> initialMicros)
+{
   gsrSensorSignal = 0;
 
   gsrSensorFiltered = 0;
@@ -48,7 +50,7 @@ void SkinConductance::initialize(unsigned long rate) {
 
   timer.start();
 
-  prevSampleMicros = timer.getMicros();
+  prevSampleMicros = initialMicros ? *initialMicros : timer.getMicros();
   setSampleRate(rate);
 }
 
@@ -57,13 +59,16 @@ void SkinConductance::setSampleRate(unsigned long rate) {
   microsBetweenSamples = 1000000UL / _sampleRate;
 }
 
-void SkinConductance::update(float signal) {
-  unsigned long t = timer.getMicros();
-  if (t - prevSampleMicros >= microsBetweenSamples) {
-    // Perform updates.
+void SkinConductance::update(float signal, unsigned long elapsedMicros) {
+  if(elapsedMicros - prevSampleMicros >= microsBetweenSamples)
+  {
     sample(signal);
-    prevSampleMicros = t;
+    prevSampleMicros = elapsedMicros;
   }
+}
+
+void SkinConductance::update(float signal) {
+  update(signal, timer.getMicros());
 }
 
 float SkinConductance::getSCR() const {
